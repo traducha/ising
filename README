@@ -1,0 +1,8 @@
+COMPILATION
+gcc <file_name> -I/usr/local/include/igraph -L/usr/local/lib -ligraph -o <output_file_name>
+
+RUN
+./<output_file_name>
+
+TO FIND OUT FLAGS
+pkg-config --libs --cflags igraph
