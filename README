@@ -1,5 +1,5 @@
 COMPILATION
-gcc main.c -O2 -I/usr/local/include/igraph -L/usr/local/lib -ligraph -lm -o main && ./main
+make && ./main
 
 RUN
 ./<output_file_name>
