@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 # f_name = "{}.csv".format(sys.argv[1])
 x_max = 20000000 # int(sys.argv[2])
 
-for iii in []:#[1,2]:
-		f_name = "res/energy_vs_B_{}.csv".format(iii)
+for iii in [2]:#[1,2]:
+		f_name = "res/energy_vs_B_{}_long.csv".format(iii)
 		with open(f_name, 'rb') as file:
 		    x, value, std = csv.reader(file, delimiter=';', quotechar='|')
 
@@ -22,7 +22,7 @@ for iii in []:#[1,2]:
 		plt.savefig(f_name.replace("csv", "png"), format="png")
 		plt.clf()
 
-		f_name = "res/mag_vs_B_{}.csv".format(iii)
+		f_name = "res/mag_vs_B_{}_long.csv".format(iii)
 		with open(f_name, 'rb') as file:
 		    x, value, std = csv.reader(file, delimiter=';', quotechar='|')
 
@@ -30,6 +30,13 @@ for iii in []:#[1,2]:
 		    x[i] = float(x[i])
 		    value[i] = float(value[i])
 		    std[i] = float(std[i])
+
+		plt.errorbar(x[1:x_max], value[1:x_max], yerr=std[1:x_max], fmt='o')
+		plt.title(f_name)
+		plt.xlabel(x[0])
+		plt.ylabel(value[0])
+		plt.savefig(f_name.replace("csv", "png"), format="png")
+		plt.clf()
 
 
 if 0:

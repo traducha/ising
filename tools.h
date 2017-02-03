@@ -125,6 +125,12 @@ double compute_energy(int g_size, igraph_vector_t *esge_list, int *spins, double
  * Calculates the total energy of the graph with given spins and connections,
  * esge_list must contain pairs of connected nodes
  */
+ 
+ 
+int count_incompatible_links(igraph_vector_t *esge_list, int *spins);
+/*
+ * Counts the number of links connecting nodes with different spins.
+ */
 
 
 #endif  /* TOOLS_H */

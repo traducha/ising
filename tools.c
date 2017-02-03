@@ -261,7 +261,6 @@ void initial_graph(igraph_t *graph, int *spins, int nodes, int edges)
     igraph_erdos_renyi_game(graph, IGRAPH_ERDOS_RENYI_GNM, nodes, edges,
                             IGRAPH_UNDIRECTED, IGRAPH_NO_LOOPS);
     
-    srand(time(NULL));
     double r;
     int i;
     for (i = 0; i < nodes; i++)
@@ -442,4 +441,24 @@ double compute_energy(int g_size, igraph_vector_t *esge_list, int *spins, double
         }
     }
     return energy;
+}
+
+
+int count_incompatible_links(igraph_vector_t *esge_list, int *spins)
+/*
+ * Counts the number of links connecting nodes with different spins.
+ */
+{
+    int incompatible = 0;
+    int i, from, to, n = igraph_vector_size(esge_list);
+    for (i = 0; i < n; i += 2)
+    {
+        from = VECTOR(*esge_list)[i];
+        to = VECTOR(*esge_list)[i+1];
+        if (spins[from] != spins[to])
+        {
+            incompatible += 1;
+        }
+    }
+    return incompatible;
 }
