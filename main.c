@@ -13,6 +13,9 @@ const int M = 200;  // number of edges <k>=2*M/N, c=M/N
 const double J = 1.0;  // J in hamiltonian
 const double h = 0.0;  // h in hamiltonian
 const double FI = 0.5; // probability of switching edge instead of spin
+const double FI_MIN = 0.0;
+const double FI_MAX = 1.0;
+const int FI_STEPS = 40;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
 const double MAX_TEMP = 10.0;  // max temperature
@@ -188,7 +191,7 @@ void algorithm_two(igraph_t *graph, int *spins, int nodes, int edges, int *mag,
 
 void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, int *mag, int *mag_abs,
             int *incompatible, double *energy, int *clust_num, int *largest_clust,
-            int *largest_degree, int times, double beta)
+            int *largest_degree, int times, double beta, double fi)
 /*
  * Metropolis algorithm of Ising model with <times> time staps and saving
  * magnetization (and its abs), energy, largest component, number of components,
@@ -203,8 +206,10 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
     igraph_vector_init(&clusters, 1);
     igraph_integer_t e_from, e_to;
     igraph_es_t es;
-    double r, delta;
+    double r, delta, proper_fi = fi;
     int v_index, e_index, tmp_clust_num, *new_e;
+    
+    if (proper_fi > 1.0) {proper_fi = FI;}
     
     int i;
     for (i = 0; i < times; i++)
@@ -216,7 +221,7 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
         e_index = (int)(((edges - 1) * r / RAND_MAX) + 0.5);
 
         r = rand();
-        if (r / RAND_MAX > FI)
+        if (r / RAND_MAX > proper_fi)
         {
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
@@ -284,7 +289,7 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
 
 
 void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
-                              int times, double beta)
+                              int times, double beta, double fi)
 /*
  * Copy of algorithm_two() without computing and returning any quantities,
  * for the faster thermalization.
@@ -295,8 +300,10 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
     igraph_vector_init(&edges_vector, 1);
     igraph_integer_t e_from, e_to;
     igraph_es_t es;
-    double r, delta;
+    double r, delta, proper_fi = fi;
     int v_index, e_index, *new_e;
+    
+    if (proper_fi > 1.0) {proper_fi = FI;}
     
     int i;
     for (i = 0; i < times; i++)
@@ -308,7 +315,7 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
         e_index = (int)(((edges - 1) * r / RAND_MAX) + 0.5);
 
         r = rand();
-        if (r / RAND_MAX > FI)
+        if (r / RAND_MAX > proper_fi)
         {
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
@@ -513,7 +520,7 @@ int phase_diagram_one(void)
 }
 
 
-int phase_diagram_two(void)
+int phase_diagram_two(double fi)
 /*
  * Computes magnetization, energy, size of the largest component,
  * and number of components (after thermalization)
@@ -545,7 +552,7 @@ int phase_diagram_two(void)
         temp[i] = MIN_TEMP + ((MAX_TEMP - MIN_TEMP) / TEMP_STEPS) * i;       
         
         // first of all thermalization
-        algorithm_two_thermalize(&graph, spins, N, M, T, 1.0/temp[i]);
+        algorithm_two_thermalize(&graph, spins, N, M, T, 1.0/temp[i], fi);
         
         // actual calculations
         mag = calloc(SAMPLE_TIME, sizeof(int));
@@ -556,7 +563,7 @@ int phase_diagram_two(void)
         largest_degree = calloc(SAMPLE_TIME, sizeof(int));
         energy = malloc(SAMPLE_TIME * sizeof(double));
         algorithm_two_complex(&graph, spins, N, M, mag, mag_abs, incompatible, energy,
-                      clust_num, largest_clust, largest_degree, SAMPLE_TIME, 1.0/temp[i]);
+                      clust_num, largest_clust, largest_degree, SAMPLE_TIME, 1.0/temp[i], fi);
 
         // computing results
         tmp = avg_int(mag, SAMPLE_TIME);
@@ -628,6 +635,20 @@ int phase_diagram_two(void)
 }
 
 
+void phase_diagram_two_over_fi(void)
+{
+    double fi;
+    
+    int i;
+    for (i = 0; i < FI_STEPS; i++)
+    {
+        fi = (double) FI_MIN + i * (FI_MAX - FI_MIN) / (FI_STEPS - 1);
+        printf("%d/%d Starting computation for FI=%f\n", i, FI_STEPS, fi);
+        phase_diagram_two(fi);
+    }
+}
+
+
 void tests()
 {
     char *test;
@@ -645,7 +666,8 @@ int main(void)
 {
     srand(time(NULL));
     //compare_thermalization();
-    phase_diagram_two();
+    //phase_diagram_two(10.0);
+    phase_diagram_two_over_fi();
     //tests();
     return 0;
 }

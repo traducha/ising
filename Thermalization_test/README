@@ -1,7 +1,0 @@
-Prównanie czasów termalizacji dla dwóch metod przełączania:
-
-1 - tylko jeden koniec krawedzi w jednym kroku czasowym
-
-2 - cala krawedz w jednym kroku czasowym
-
-wyniki dla N=500, M=1000, J=1, h=0, B=0.8
