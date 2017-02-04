@@ -6,20 +6,20 @@
 #include "tools.h"
 
 
-const int T = 20000;  // thermalization time
-const int SAMPLE_TIME = 100000;  // time window to average mag ang energy over (after thermalization)
+const int T = 100000;  // thermalization time
+const int SAMPLE_TIME = 500000;  // time window to average mag ang energy over (after thermalization)
 const int N = 100;  // number of nodes
-const int M = 200;  // number of edges <k>=2*M/N, c=M/N
+const int M = 300;  // number of edges <k>=2*M/N, c=M/N
 const double J = 1.0;  // J in hamiltonian
 const double h = 0.0;  // h in hamiltonian
 const double FI = 0.5; // probability of switching edge instead of spin
 const double FI_MIN = 0.0;
 const double FI_MAX = 1.0;
-const int FI_STEPS = 40;
+const int FI_STEPS = 50;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
 const double MAX_TEMP = 10.0;  // max temperature
-const int TEMP_STEPS = 10;  // number of values for temperature
+const int TEMP_STEPS = 120;  // number of values for temperature
 
 
 void algorithm_one(igraph_t *graph, int *spins, int nodes, int edges,
