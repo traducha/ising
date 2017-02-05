@@ -607,25 +607,25 @@ int phase_diagram_two(double fi)
     char *file_name;
     file_name = malloc(100 * sizeof(char));
     
-    sprintf(file_name, "res/energy_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, FI);
+    sprintf(file_name, "res/energy_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
     save_to_csv_xystd_double(file_name, temp, energy_avg, energy_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/mag_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, FI);
+    sprintf(file_name, "res/mag_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
     save_to_csv_xystd_double(file_name, temp, mag_avg, mag_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/mag_abs_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, FI);
+    sprintf(file_name, "res/mag_abs_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
     save_to_csv_xystd_double(file_name, temp, mag_abs_avg, mag_abs_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/incompatible_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, FI);
+    sprintf(file_name, "res/incompatible_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
     save_to_csv_xystd_double(file_name, temp, incompatible_avg, incompatible_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/largest_clust_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, FI);
+    sprintf(file_name, "res/largest_clust_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
     save_to_csv_xystd_double(file_name, temp, largest_clust_avg, largest_clust_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/clust_num_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, FI);
+    sprintf(file_name, "res/clust_num_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
     save_to_csv_xystd_double(file_name, temp, clust_num_avg, clust_num_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/largest_degree_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, FI);
+    sprintf(file_name, "res/largest_degree_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
     save_to_csv_xystd_double(file_name, temp, largest_degree_avg, largest_degree_std, TEMP_STEPS);
     
     free(file_name);    
