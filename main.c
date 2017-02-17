@@ -7,24 +7,25 @@
 
 
 const int T = 100000;  // thermalization time
-const int SAMPLE_TIME = 500000;  // time window to average mag ang energy over (after thermalization)
+const int SAMPLE_TIME = 200000;  // time window to average mag ang energy over (after thermalization)
 const int N = 100;  // number of nodes
 const int M = 300;  // number of edges <k>=2*M/N, c=M/N
+const double GAMMA = 2.0;  // power of the degree in hamiltonian: -{sum_over_i} k_i^gamma 
 const double J = 1.0;  // J in hamiltonian
 const double h = 0.0;  // h in hamiltonian
 const double FI = 0.5; // probability of switching edge instead of spin
-const double FI_MIN = 0.0;
-const double FI_MAX = 1.0;
-const int FI_STEPS = 50;
+const double FI_MIN = 0.5;
+const double FI_MAX = 0.5;
+const int FI_STEPS = 1;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
 const double MAX_TEMP = 10.0;  // max temperature
-const int TEMP_STEPS = 120;  // number of values for temperature
+const int TEMP_STEPS = 80;  // number of values for temperature
 
 
 void algorithm_one(igraph_t *graph, int *spins, int nodes, int edges,
                         int *mag, double *energy, int times, double beta)
-/*
+/* OLD, just for comparsion
  * Metropolis algorithm of Ising model with <times> time steps and saving magnetization and energy.
  * Currently with switching only one end of a node.
  */
@@ -162,6 +163,7 @@ void algorithm_two(igraph_t *graph, int *spins, int nodes, int edges, int *mag,
         new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
         
         delta = - J * (spins[new_e[0]] * spins[new_e[1]] - spins[e_from] * spins[e_to]);
+        delta += energy_change_degree(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
         r = rand();
         if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
         {
@@ -249,6 +251,7 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
             new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
             
             delta = - J * (spins[new_e[0]] * spins[new_e[1]] - spins[e_from] * spins[e_to]);
+            delta += energy_change_degree(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
             r = rand();
             if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
             {
@@ -343,6 +346,7 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
             new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
             
             delta = - J * (spins[new_e[0]] * spins[new_e[1]] - spins[e_from] * spins[e_to]);
+            delta += energy_change_degree(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
             r = rand();
             if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
             {
@@ -607,25 +611,25 @@ int phase_diagram_two(double fi)
     char *file_name;
     file_name = malloc(100 * sizeof(char));
     
-    sprintf(file_name, "res/energy_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
+    sprintf(file_name, "res/energy_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
     save_to_csv_xystd_double(file_name, temp, energy_avg, energy_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/mag_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
+    sprintf(file_name, "res/mag_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
     save_to_csv_xystd_double(file_name, temp, mag_avg, mag_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/mag_abs_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
+    sprintf(file_name, "res/mag_abs_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
     save_to_csv_xystd_double(file_name, temp, mag_abs_avg, mag_abs_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/incompatible_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
+    sprintf(file_name, "res/incompatible_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
     save_to_csv_xystd_double(file_name, temp, incompatible_avg, incompatible_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/largest_clust_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
+    sprintf(file_name, "res/largest_clust_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
     save_to_csv_xystd_double(file_name, temp, largest_clust_avg, largest_clust_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/clust_num_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
+    sprintf(file_name, "res/clust_num_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
     save_to_csv_xystd_double(file_name, temp, clust_num_avg, clust_num_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/largest_degree_vs_B_N%d_L%d_J%f_h%f_FI%f.csv", N, M, J, h, fi);
+    sprintf(file_name, "res/largest_degree_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
     save_to_csv_xystd_double(file_name, temp, largest_degree_avg, largest_degree_std, TEMP_STEPS);
     
     free(file_name);    
@@ -665,9 +669,10 @@ void tests()
 int main(void)
 {
     srand(time(NULL));
+    
     //compare_thermalization();
-    //phase_diagram_two(10.0);
-    phase_diagram_two_over_fi();
+    phase_diagram_two(FI);
+    //phase_diagram_two_over_fi();
     //tests();
     return 0;
 }

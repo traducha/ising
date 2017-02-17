@@ -297,6 +297,33 @@ double energy_change(int spin_change, igraph_vector_t *neigs, int *spins, double
 }
 
 
+double energy_change_degree(igraph_t *graph, int old_from, int old_to, int new_from, int new_to,
+                            double gamma)
+/*
+ * Calculates the change in hamiltonian after edge rewiring,
+ * due to the change of the degree.
+ * It's a result of this factor in hamiltonian: -{sum_over_i} k_i^gamma
+ */
+{
+    double delta;
+    igraph_vector_t degree, seq;
+    igraph_vector_init(&degree, 1);
+    
+    igraph_vector_init(&seq, 4);
+    VECTOR(seq)[0] = old_from;
+    VECTOR(seq)[1] = old_to;
+    VECTOR(seq)[2] = new_from;
+    VECTOR(seq)[3] = new_to;
+    
+    igraph_degree(graph, &degree, igraph_vss_vector(&seq), IGRAPH_ALL, IGRAPH_LOOPS);
+    
+    delta = (pow((double) VECTOR(degree)[0], gamma) + pow((double) VECTOR(degree)[1], gamma))
+            - (pow((double) VECTOR(degree)[2], gamma) + pow((double) VECTOR(degree)[3], gamma));
+    
+    return delta;
+}
+
+
 int new_vertex(int g_size, int exclude1, int exclude2, igraph_vector_t *exclude)
 /*
  * Randomly selects new vertex

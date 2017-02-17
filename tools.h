@@ -78,6 +78,15 @@ double energy_change(int spin_change, igraph_vector_t *neigs, int *spins, double
  * Calculates the change in hamiltonian after given spin_change,
  * spin_change must be equal <new_state - old_state>
  */
+ 
+ 
+double energy_change_degree(igraph_t *graph, int old_from, int old_to, int new_from, int new_to,
+                            double gamma);
+/*
+ * Calculates the change in hamiltonian after edge rewiring,
+ * due to the change of the degree.
+ * It's a result of this factor in hamiltonian: -{sum_over_i} k_i^gamma
+ */
 
 
 int new_vertex(int g_size, int exclude1, int exclude2, igraph_vector_t *exclude);
