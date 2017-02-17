@@ -10,7 +10,8 @@ const int T = 100000;  // thermalization time
 const int SAMPLE_TIME = 200000;  // time window to average mag ang energy over (after thermalization)
 const int N = 100;  // number of nodes
 const int M = 300;  // number of edges <k>=2*M/N, c=M/N
-const double GAMMA = 2.0;  // power of the degree in hamiltonian: -{sum_over_i} k_i^gamma 
+const double GAMMA = 2.0;  // power of the degree in hamiltonian: -{sum_over_i} k_i^gamma
+const double ALPHA = 0.0;
 const double J = 1.0;  // J in hamiltonian
 const double h = 0.0;  // h in hamiltonian
 const double FI = 0.5; // probability of switching edge instead of spin
@@ -19,7 +20,7 @@ const double FI_MAX = 0.5;
 const int FI_STEPS = 1;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
-const double MAX_TEMP = 10.0;  // max temperature
+const double MAX_TEMP = 30.0;  // max temperature
 const int TEMP_STEPS = 80;  // number of values for temperature
 
 
@@ -141,7 +142,9 @@ void algorithm_two(igraph_t *graph, int *spins, int nodes, int edges, int *mag,
 
         // spin switching
         igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
-        delta = energy_change(-2 * spins[v_index], &neigs, spins, J, h);  // -2 * spin is the possible energy change
+            delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
+                                             spins, ALPHA);
+            delta +=  h * 2 * spins[v_index];
         if (delta <= 0.0)
         {
             spins[v_index] = -spins[v_index];
@@ -162,8 +165,9 @@ void algorithm_two(igraph_t *graph, int *spins, int nodes, int edges, int *mag,
         // draw new ends for the edge
         new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
         
-        delta = - J * (spins[new_e[0]] * spins[new_e[1]] - spins[e_from] * spins[e_to]);
-        delta += energy_change_degree(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
+        delta = energy_change_alpha_egde(graph, (int) e_from, (int) e_to, new_e[0], new_e[1],
+                                             spins, ALPHA);
+        delta += energy_change_gamma(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
         r = rand();
         if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
         {
@@ -227,7 +231,9 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
         {
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
-            delta = energy_change(-2 * spins[v_index], &neigs, spins, J, h);  // -2 * spin is the possible energy change
+            delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
+                                             spins, ALPHA);
+            delta +=  h * 2 * spins[v_index]; 
             if (delta <= 0.0)
             {
                 spins[v_index] = -spins[v_index];
@@ -250,8 +256,9 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
             // draw new ends for the edge
             new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
             
-            delta = - J * (spins[new_e[0]] * spins[new_e[1]] - spins[e_from] * spins[e_to]);
-            delta += energy_change_degree(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
+            delta = energy_change_alpha_egde(graph, (int) e_from, (int) e_to, new_e[0], new_e[1],
+                                             spins, ALPHA);
+            delta += energy_change_gamma(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
             r = rand();
             if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
             {
@@ -322,7 +329,9 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
         {
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
-            delta = energy_change(-2 * spins[v_index], &neigs, spins, J, h);  // -2 * spin is the possible energy change
+            delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
+                                             spins, ALPHA);
+            delta +=  h * 2 * spins[v_index];
             if (delta <= 0.0)
             {
                 spins[v_index] = -spins[v_index];
@@ -345,8 +354,9 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
             // draw new ends for the edge
             new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
             
-            delta = - J * (spins[new_e[0]] * spins[new_e[1]] - spins[e_from] * spins[e_to]);
-            delta += energy_change_degree(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
+            delta = energy_change_alpha_egde(graph, (int) e_from, (int) e_to, new_e[0], new_e[1],
+                                             spins, ALPHA);
+            delta += energy_change_gamma(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
             r = rand();
             if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
             {
@@ -611,25 +621,25 @@ int phase_diagram_two(double fi)
     char *file_name;
     file_name = malloc(100 * sizeof(char));
     
-    sprintf(file_name, "res/energy_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
+    sprintf(file_name, "res/energy_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f_AL%f.csv", N, M, J, h, fi, GAMMA, ALPHA);
     save_to_csv_xystd_double(file_name, temp, energy_avg, energy_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/mag_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
+    sprintf(file_name, "res/mag_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f_AL%f.csv", N, M, J, h, fi, GAMMA, ALPHA);
     save_to_csv_xystd_double(file_name, temp, mag_avg, mag_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/mag_abs_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
+    sprintf(file_name, "res/mag_abs_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f_AL%f.csv", N, M, J, h, fi, GAMMA, ALPHA);
     save_to_csv_xystd_double(file_name, temp, mag_abs_avg, mag_abs_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/incompatible_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
+    sprintf(file_name, "res/incompatible_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f_AL%f.csv", N, M, J, h, fi, GAMMA, ALPHA);
     save_to_csv_xystd_double(file_name, temp, incompatible_avg, incompatible_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/largest_clust_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
+    sprintf(file_name, "res/largest_clust_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f_AL%f.csv", N, M, J, h, fi, GAMMA, ALPHA);
     save_to_csv_xystd_double(file_name, temp, largest_clust_avg, largest_clust_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/clust_num_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
+    sprintf(file_name, "res/clust_num_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f_AL%f.csv", N, M, J, h, fi, GAMMA, ALPHA);
     save_to_csv_xystd_double(file_name, temp, clust_num_avg, clust_num_std, TEMP_STEPS);
     
-    sprintf(file_name, "res/largest_degree_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f.csv", N, M, J, h, fi, GAMMA);
+    sprintf(file_name, "res/largest_degree_vs_B_N%d_L%d_J%f_h%f_FI%f_GA%f_AL%f.csv", N, M, J, h, fi, GAMMA, ALPHA);
     save_to_csv_xystd_double(file_name, temp, largest_degree_avg, largest_degree_std, TEMP_STEPS);
     
     free(file_name);    
