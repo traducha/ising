@@ -10,8 +10,8 @@ const int T = 100000;  // thermalization time
 const int SAMPLE_TIME = 200000;  // time window to average mag ang energy over (after thermalization)
 const int N = 100;  // number of nodes
 const int M = 300;  // number of edges <k>=2*M/N, c=M/N
-const double GAMMA = 2.0;  // power of the degree in hamiltonian: -{sum_over_i} k_i^gamma
-const double ALPHA = 0.0;
+const double GAMMA = 1.0;  // power of the degree in hamiltonian (1.0 is neutral): -{sum_over_i} k_i^gamma
+const double ALPHA = 1.0;  // power of Jij (0.0 is neutral)
 const double J = 1.0;  // J in hamiltonian
 const double h = 0.0;  // h in hamiltonian
 const double FI = 0.5; // probability of switching edge instead of spin
