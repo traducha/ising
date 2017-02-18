@@ -20,8 +20,8 @@ const double FI_MAX = 0.5;
 const int FI_STEPS = 1;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
-const double MAX_TEMP = 30.0;  // max temperature
-const int TEMP_STEPS = 80;  // number of values for temperature
+const double MAX_TEMP = 300.0;  // max temperature
+const int TEMP_STEPS = 100;  // number of values for temperature
 
 
 void algorithm_one(igraph_t *graph, int *spins, int nodes, int edges,
@@ -34,7 +34,7 @@ void algorithm_one(igraph_t *graph, int *spins, int nodes, int edges,
     igraph_vector_t neigs, edges_vector;
     igraph_vector_init(&neigs, 1);
     igraph_vector_init(&edges_vector, 1);
-    igraph_integer_t  e_from, e_to, v_to_new;
+    igraph_integer_t e_from, e_to, v_to_new;
     igraph_es_t es;
     double r, delta;
     int v_index, e_index, v_to_detach, v_to_keep;
@@ -105,7 +105,7 @@ void algorithm_one(igraph_t *graph, int *spins, int nodes, int edges,
         
         // compute magnetization and internal energy
         igraph_get_edgelist(graph, &edges_vector, 0);
-        energy[i] = compute_energy(nodes, &edges_vector, spins, J, h);
+        energy[i] = compute_energy(graph, nodes, &edges_vector, spins, ALPHA, h, GAMMA);
         mag[i] = sum_array_int(spins, nodes);
     }
     
@@ -185,7 +185,7 @@ void algorithm_two(igraph_t *graph, int *spins, int nodes, int edges, int *mag,
         
         // compute magnetization and internal energy
         igraph_get_edgelist(graph, &edges_vector, 0);
-        energy[i] = compute_energy(nodes, &edges_vector, spins, J, h);
+        energy[i] = compute_energy(graph, nodes, &edges_vector, spins, ALPHA, h, GAMMA);
         mag[i] = sum_array_int(spins, nodes);
     }
     
@@ -277,13 +277,13 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
         
         // compute magnetization, internal energy, number and size of clusters, incompatible links
         igraph_get_edgelist(graph, &edges_vector, 0);
-        energy[i] = compute_energy(nodes, &edges_vector, spins, J, h);
+        energy[i] = compute_energy(graph, nodes, &edges_vector, spins, ALPHA, h, GAMMA);
         mag[i] = sum_array_int(spins, nodes);
         mag_abs[i] = abs(mag[i]);
         
         igraph_clusters(graph, NULL, &clusters, &tmp_clust_num, IGRAPH_WEAK);
         clust_num[i] = tmp_clust_num;
-        largest_clust[i] = (int) VECTOR(clusters)[0];  // first one is the biggest
+        largest_clust[i] = (int) igraph_vector_max(&clusters);
         
         incompatible[i] = count_incompatible_links(&edges_vector, spins);
         

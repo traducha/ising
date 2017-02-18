@@ -281,7 +281,7 @@ void initial_graph(igraph_t *graph, int *spins, int nodes, int edges)
 
 double energy_change(int spin_change, igraph_vector_t *neigs, int *spins, double J, double h)
 /*
- * Calculates the change in hamiltonian after given spin_change,
+ * Calculates the change in the calssic hamiltonian after given spin_change,
  * spin_change must be equal <new_state - old_state>
  */
 {
@@ -322,6 +322,8 @@ double energy_change_gamma(igraph_t *graph, int old_from, int old_to, int new_fr
             + pow((double) VECTOR(degree)[2], gamma) - pow((double) (VECTOR(degree)[2] + 1), gamma)
             + pow((double) VECTOR(degree)[3], gamma) - pow((double) (VECTOR(degree)[3] + 1), gamma);
     
+    igraph_vector_destroy(&degree);
+    igraph_vector_destroy(&seq);
     return delta;
 }
 
@@ -352,6 +354,9 @@ double energy_change_alpha_spin(igraph_t *graph, int v_index, igraph_vector_t *n
     
     delta = - spin_change * pow((double) VECTOR(v_degree)[0], alpha) * delta;
     
+    igraph_vector_destroy(&degrees);
+    igraph_vector_destroy(&v_degree);
+    igraph_vector_destroy(&v_seq);
     return delta;
 }
 
@@ -363,10 +368,21 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
  */
 {
     double delta = 0.0, tmp_delta = 0.0;
-    igraph_vector_t neigs, degrees, v_degree;
-    igraph_vector_init(&neigs, 1);
+    igraph_vector_t neigs, degrees, v_degrees;
+    igraph_vector_init(&neigs, 4);
     igraph_vector_init(&degrees, 1);
-    igraph_vector_init(&v_degree, 1);
+    igraph_vector_init(&v_degrees, 1);
+    
+    // i,j -> m,n
+    VECTOR(neigs)[0] = old_from;  // so degree of old_from will be VECTOR(v_degrees)[0]
+    VECTOR(neigs)[1] = old_to;
+    VECTOR(neigs)[2] = new_from;
+    VECTOR(neigs)[3] = new_to;
+    igraph_degree(graph, &v_degrees, igraph_vss_vector(&neigs), IGRAPH_ALL, IGRAPH_LOOPS);
+    delta +=  spins[old_from] * spins[old_to] * pow((double) VECTOR(v_degrees)[0], alpha)
+                * pow((double) VECTOR(v_degrees)[1], alpha)
+            - spins[new_from] * spins[new_to] * pow((double) (VECTOR(v_degrees)[2] + 1), alpha)
+                * pow((double) (VECTOR(v_degrees)[3] + 1), alpha);
     
     // old_from
     igraph_neighbors(graph, &neigs, old_from, IGRAPH_ALL);
@@ -381,7 +397,8 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
             tmp_delta += pow((double) VECTOR(degrees)[i], alpha) * spins[neig_index];
         }
     }
-    delta += tmp_delta * spins[old_from];
+    delta += tmp_delta * spins[old_from] * 
+                (pow((double) VECTOR(v_degrees)[0], alpha) - pow((double) (VECTOR(v_degrees)[0] - 1), alpha));
     tmp_delta = 0.0;
     
     // old_to
@@ -396,7 +413,8 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
             tmp_delta += pow((double) VECTOR(degrees)[i], alpha) * spins[neig_index];
         }
     }
-    delta += tmp_delta * spins[old_to];
+    delta += tmp_delta * spins[old_to] * 
+                (pow((double) VECTOR(v_degrees)[1], alpha) - pow((double) (VECTOR(v_degrees)[1] - 1), alpha));
     tmp_delta = 0.0;
     
     // new_from
@@ -411,7 +429,8 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
             tmp_delta += pow((double) VECTOR(degrees)[i], alpha) * spins[neig_index];
         }
     }
-    delta += - tmp_delta * spins[new_from];
+    delta += tmp_delta * spins[new_from] * 
+                (pow((double) VECTOR(v_degrees)[2], alpha) - pow((double) (VECTOR(v_degrees)[2] + 1), alpha));
     tmp_delta = 0.0;
     
     // new_to
@@ -426,20 +445,9 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
             tmp_delta += pow((double) VECTOR(degrees)[i], alpha) * spins[neig_index];
         }
     }
-    delta += - tmp_delta * spins[new_to];
+    delta += tmp_delta * spins[new_to] * 
+                (pow((double) VECTOR(v_degrees)[3], alpha) - pow((double) (VECTOR(v_degrees)[3] + 1), alpha));
     tmp_delta = 0.0;
-    
-    // i,j -> m,n
-    igraph_vector_init(&neigs, 4);
-    VECTOR(neigs)[0] = old_from;
-    VECTOR(neigs)[1] = old_to;
-    VECTOR(neigs)[2] = new_from;
-    VECTOR(neigs)[3] = new_to;
-    igraph_degree(graph, &degrees, igraph_vss_vector(&neigs), IGRAPH_ALL, IGRAPH_LOOPS);
-    delta +=  spins[old_from] * spins[old_to] * pow((double) VECTOR(degrees)[0], alpha)
-                * pow((double) VECTOR(degrees)[1], alpha)
-            - spins[new_from] * spins[new_to] * pow((double) (VECTOR(degrees)[2] + 1), alpha)
-                * pow((double) (VECTOR(degrees)[3] + 1), alpha);
 
     // cross terms
     igraph_integer_t eid;
@@ -449,8 +457,8 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
     {
         delta += spins[old_from] * spins[new_from]
                 * (
-                pow((double) VECTOR(degrees)[0], alpha) * pow((double) VECTOR(degrees)[2], alpha)
-                - pow((double) (VECTOR(degrees)[0] - 1), alpha) * pow((double) (VECTOR(degrees)[2] + 1), alpha)
+                pow((double) VECTOR(v_degrees)[0], alpha) * pow((double) VECTOR(v_degrees)[2], alpha)
+                - pow((double) (VECTOR(v_degrees)[0] - 1), alpha) * pow((double) (VECTOR(v_degrees)[2] + 1), alpha)
                 );
     }
     
@@ -459,8 +467,8 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
     {
         delta += spins[old_from] * spins[new_to]
                 * (
-                pow((double) VECTOR(degrees)[0], alpha) * pow((double) VECTOR(degrees)[3], alpha)
-                - pow((double) (VECTOR(degrees)[0] - 1), alpha) * pow((double) (VECTOR(degrees)[3] + 1), alpha)
+                pow((double) VECTOR(v_degrees)[0], alpha) * pow((double) VECTOR(v_degrees)[3], alpha)
+                - pow((double) (VECTOR(v_degrees)[0] - 1), alpha) * pow((double) (VECTOR(v_degrees)[3] + 1), alpha)
                 );
     }
     
@@ -470,8 +478,8 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
     {
         delta += spins[old_to] * spins[new_from]
                 * (
-                pow((double) VECTOR(degrees)[1], alpha) * pow((double) VECTOR(degrees)[2], alpha)
-                - pow((double) (VECTOR(degrees)[1] - 1), alpha) * pow((double) (VECTOR(degrees)[2] + 1), alpha)
+                pow((double) VECTOR(v_degrees)[1], alpha) * pow((double) VECTOR(v_degrees)[2], alpha)
+                - pow((double) (VECTOR(v_degrees)[1] - 1), alpha) * pow((double) (VECTOR(v_degrees)[2] + 1), alpha)
                 );
     }
     
@@ -480,11 +488,14 @@ double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int n
     {
         delta += spins[old_to] * spins[new_to]
                 * (
-                pow((double) VECTOR(degrees)[1], alpha) * pow((double) VECTOR(degrees)[3], alpha)
-                - pow((double) (VECTOR(degrees)[1] - 1), alpha) * pow((double) (VECTOR(degrees)[3] + 1), alpha)
+                pow((double) VECTOR(v_degrees)[1], alpha) * pow((double) VECTOR(v_degrees)[3], alpha)
+                - pow((double) (VECTOR(v_degrees)[1] - 1), alpha) * pow((double) (VECTOR(v_degrees)[3] + 1), alpha)
                 );
     }
     
+    igraph_vector_destroy(&degrees);
+    igraph_vector_destroy(&v_degrees);
+    igraph_vector_destroy(&neigs);
     return delta;
 }
 
@@ -611,27 +622,32 @@ double std_int(int *array, int len, double avg)
 }
 
 
-double compute_energy(int g_size, igraph_vector_t *esge_list, int *spins, double J, double h)
+double compute_energy(igraph_t *graph, int g_size, igraph_vector_t *esge_list, int *spins,
+                      double alpha, double h, double gamma)
 /*
  * Calculates the total energy of the graph with given spins and connections,
  * esge_list must contain pairs of connected nodes
  */
 {
+    igraph_vector_t degrees;
+    igraph_vector_init(&degrees, 2);
+    igraph_degree(graph, &degrees, igraph_vss_all(), IGRAPH_ALL, IGRAPH_LOOPS);
+    
     double energy = 0.0;
     int i, from, to, n = igraph_vector_size(esge_list);
     for (i = 0; i < n; i += 2)
     {
         from = VECTOR(*esge_list)[i];
         to = VECTOR(*esge_list)[i+1];
-        energy += - (J * spins[from] * spins[to]);
+        energy += - (pow((double) (VECTOR(degrees)[from] * VECTOR(degrees)[to]), alpha) * spins[from] * spins[to]);
     }
-    if (h != 0.0)
+    
+    for (i = 0; i < g_size; i++)
     {
-        for (i = 0; i < g_size; i++)
-        {
-            energy += - h * spins[i];
-        }
+        energy += - (h * spins[i] + pow((double) VECTOR(degrees)[i], gamma));
     }
+    
+    igraph_vector_destroy(&degrees);
     return energy;
 }
 

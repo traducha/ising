@@ -143,7 +143,8 @@ double std_int(int *array, int len, double avg);
  */
 
 
-double compute_energy(int g_size, igraph_vector_t *esge_list, int *spins, double J, double h);
+double compute_energy(igraph_t *graph, int g_size, igraph_vector_t *esge_list, int *spins,
+                      double alpha, double h, double gamma);
 /*
  * Calculates the total energy of the graph with given spins and connections,
  * esge_list must contain pairs of connected nodes

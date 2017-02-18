@@ -16,7 +16,7 @@ A = '1.000000'
 fis = ['0.000000', '0.200000', '0.400000', '0.600000', '0.800000', '1.000000']
 quants = ['mag', 'mag_abs', 'energy', 'incompatible', 'largest_clust', 'clust_num', 'largest_degree']
 
-os.chdir("../res")
+os.chdir("res")
 
 def fetch_fi():
     fis = []
