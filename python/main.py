@@ -3,75 +3,221 @@ import time
 from numpy.random import random as rand
 import numpy as np
 import csv
+from collections import OrderedDict
+from pprint import pprint
 
 
-T = 100000
+THERMAL = 50000  # min 20000 for gamma, 50000 for phi
+SAMPLE_TIME = 100000
 N = 100
-M = 200
-J = 1.0
+M = 300
 h = 0.0
-B = 0.1
+T = 600.0  # 1.0 175.0 200.0 400.0 600.0
+B = 1.0 / T
+GAMMA = 1.0
+PHI = 1.0  # or alpha
 
 
 def initialize_graph(n, m):
-    graph = ig.Graph.Erdos_Renyi(n=n, m=m)
-    graph.vs()["spin"] = (np.int_(rand((N, 1)) * 2) * 2) - 1
-    return graph
+    g = ig.Graph.Erdos_Renyi(n=n, m=m)
+    g.vs()["spin"] = (np.int_(rand((N, 1)) * 2) * 2) - 1
+    return g
 
 
-def energy_change(graph, spin_change, neigs):
+def spin(g, index):
+    return g.vs(index)["spin"][0][0]
+
+
+def energy_change_spin(g, spin_change, v_index, neigs):
     delta = 0.0
+    v_degree = g.degree(v_index)
+    neigs_degree = g.degree(neigs)
+
     for i in xrange(len(neigs)):
-        delta += graph.vs(neigs[i])["spin"][0][0]
-    delta = - (J * delta + h) * spin_change
+        delta += (neigs_degree[i] ** PHI) * g.vs(neigs[i])["spin"][0][0]
+    delta *= - spin_change * (v_degree ** PHI)
+    return delta
+
+
+def energy_change_edge_alpha(g, edge_list, old_from, old_to, new_from, new_to):
+    old_from_d, old_to_d, new_from_d, new_to_d = g.degree([old_from, old_to, new_from, new_to])
+    delta = 0.0
+    tmp_delta = 0.0
+
+    # i,j -> m,n
+    delta += spin(g, old_from) * spin(g, old_to) * (old_from_d ** PHI) * (old_to_d ** PHI)\
+        - spin(g, new_from) * spin(g, new_to) * ((new_from_d + 1) ** PHI) * ((new_to_d + 1) ** PHI)
+
+    # old_from neighbours
+    neigs = g.neighbors(old_from)
+    neigs_d = g.degree(neigs)
+    for i, neig in enumerate(neigs):
+        if neig not in (old_from, old_to, new_from, new_to):
+            tmp_delta += (neigs_d[i] ** PHI) * spin(g, neig)
+    delta += tmp_delta * spin(g, old_from) * (old_from_d ** PHI - (old_from_d - 1) ** PHI)
+    tmp_delta = 0.0
+
+    # old_to neighbours
+    neigs = g.neighbors(old_to)
+    neigs_d = g.degree(neigs)
+    for i, neig in enumerate(neigs):
+        if neig not in (old_from, old_to, new_from, new_to):
+            tmp_delta += (neigs_d[i] ** PHI) * spin(g, neig)
+    delta += tmp_delta * spin(g, old_to) * (old_to_d ** PHI - (old_to_d - 1) ** PHI)
+    tmp_delta = 0.0
+
+    # new_from neighbours
+    neigs = g.neighbors(new_from)
+    neigs_d = g.degree(neigs)
+    for i, neig in enumerate(neigs):
+        if neig not in (old_from, old_to, new_from, new_to):
+            tmp_delta += (neigs_d[i] ** PHI) * spin(g, neig)
+    delta += tmp_delta * spin(g, new_from) * (new_from_d ** PHI - (new_from_d + 1) ** PHI)
+    tmp_delta = 0.0
+
+    # new_to neighbours
+    neigs = g.neighbors(new_to)
+    neigs_d = g.degree(neigs)
+    for i, neig in enumerate(neigs):
+        if neig not in (old_from, old_to, new_from, new_to):
+            tmp_delta += (neigs_d[i] ** PHI) * spin(g, neig)
+    delta += tmp_delta * spin(g, new_to) * (new_to_d ** PHI - (new_to_d + 1) ** PHI)
+    tmp_delta = 0.0
+
+    # cross terms
+    if (old_from, new_from) in edge_list or (new_from, old_from) in edge_list:
+        delta += spin(g, old_from) * spin(g, new_from) * ((old_from_d ** PHI) * (new_from_d ** PHI)
+                                                          - ((old_from_d - 1) ** PHI) * ((new_from_d + 1) ** PHI))
+
+    if (old_from, new_to) in edge_list or (new_to, old_from) in edge_list:
+        delta += spin(g, old_from) * spin(g, new_to) * ((old_from_d ** PHI) * (new_to_d ** PHI)
+                                                          - ((old_from_d - 1) ** PHI) * ((new_to_d + 1) ** PHI))
+
+    if (old_to, new_from) in edge_list or (new_from, old_to) in edge_list:
+        delta += spin(g, old_to) * spin(g, new_from) * ((old_to_d ** PHI) * (new_from_d ** PHI)
+                                                          - ((old_to_d - 1) ** PHI) * ((new_from_d + 1) ** PHI))
+
+    if (old_to, new_to) in edge_list or (new_to, old_to) in edge_list:
+        delta += spin(g, old_to) * spin(g, new_to) * ((old_to_d ** PHI) * (new_to_d ** PHI)
+                                                        - ((old_to_d - 1) ** PHI) * ((new_to_d + 1) ** PHI))
+
+    return delta
+
+
+def energy_change_edge_gamma(g, old_from, old_to, new_from, new_to):
+    old_from_d, old_to_d, new_from_d, new_to_d = g.degree([old_from, old_to, new_from, new_to])
+    delta = old_from_d ** GAMMA - (old_from_d - 1) ** GAMMA \
+            + old_to_d ** GAMMA - (old_to_d - 1) ** GAMMA \
+            + new_from_d ** GAMMA - (new_from_d + 1) ** GAMMA \
+            + new_to_d ** GAMMA - (new_to_d + 1) ** GAMMA
     return delta
 
 
 def new_vertex(n, exclude):
     new_v = np.int_(np.floor(rand() * n))
     if new_v in exclude:
-        new_v = new_vertex(n, exclude)
+        return new_vertex(n, exclude)
     return new_v
 
 
-def main_loop(graph, n, m, times):
-    mag = []
-    for i in xrange(times):
-        v_index = np.int_(np.floor(rand() * n))
-        e_index = np.int_(np.floor(rand() * m))
+def draw_new_edge(n, edge_list, v_from, v_to):
+    new_from = new_vertex(n, (v_from, v_to))
+    new_to = new_vertex(n, (v_from, v_to, new_from))
+    if (new_from, new_to) in edge_list or (new_to, new_from) in edge_list:
+        return draw_new_edge(n, edge_list, v_from, v_to)
+    return new_from, new_to
 
-        # spin switching
-        neigs = graph.neighbors(v_index)
-        delta = energy_change(graph, -2 * graph.vs(v_index)["spin"][0][0], neigs)
-        if delta <= 0.0 or rand() < np.exp(- B * delta):
-            graph.vs(v_index)["spin"][0][0] *= -1
 
-        # edge rewiring
-        v_from, v_to = graph.get_edgelist()[e_index]
-        v_to_keep, v_to_detach = (v_from, v_to) if rand() < 0.5 else (v_to, v_from)
-        exclude = graph.neighbors(v_to_keep) + [v_to_keep, v_to_detach]
-        v_to_new = new_vertex(n, exclude)
-        delta = - J * graph.vs(v_to_keep)["spin"][0][0] * \
-                (graph.vs(v_to_new)["spin"][0][0] - graph.vs(v_to_detach)["spin"][0][0])
-        if delta <= 0.0 or rand() < np.exp(- B * delta):
-            graph.delete_edges((v_from, v_to))
-            graph.add_edges([(v_to_keep, v_to_new)])
+def one_step(g, n, m):
+    v_index = np.int_(np.floor(rand() * n))
+    e_index = np.int_(np.floor(rand() * m))
 
-        mag.append(np.sum(graph.vs()["spin"]))
+    # spin switching
+    neigs = g.neighbors(v_index)
+    delta = energy_change_spin(g, -2 * g.vs(v_index)["spin"][0][0], v_index, neigs)
+    if delta <= 0.0 or rand() < np.exp(- B * delta):
+        g.vs(v_index)["spin"][0][0] *= -1
 
-    return graph, mag
+    # edge rewiring
+    edge_list = g.get_edgelist()
+    v_from, v_to = edge_list[e_index]
+    new_from, new_to = draw_new_edge(n, edge_list, v_from, v_to)
+
+    delta = energy_change_edge_gamma(g, v_from, v_to, new_from, new_to)
+    delta += energy_change_edge_alpha(g, edge_list, v_from, v_to, new_from, new_to)
+    if delta <= 0.0 or rand() < np.exp(- B * delta):
+        g.delete_edges((v_from, v_to))
+        g.add_edges([(new_from, new_to)])
+    return g
+
+
+def count_incompatible(g):
+    number = 0
+    for v_from, v_to in g.get_edgelist():
+        if spin(g, v_from) != spin(g, v_to):
+            number += 1
+    return number
+
+
+def compute_energy(g):
+    energy = 0.0
+    for v_from, v_to in g.get_edgelist():
+        energy += - ((g.degree(v_from) * g.degree(v_to)) ** PHI) * spin(g, v_from) * spin(g, v_to)
+
+    for k in g.degree():
+        energy += - (k ** GAMMA)
+    return energy
+
+
+def main_loop(g, n, m):
+    mag, mag_abs, energy, inc, c_num, largest_c, k_max = [], [], [], [], [], [], []
+    k_dist = OrderedDict.fromkeys([k for k in xrange(0, n)], 0.0)  # min degree is 0, maximal is n-1
+
+    for i in xrange(THERMAL):
+        g = one_step(g, n, m)
+        if i % max(n, m) == 0:
+            print('Thermalization: {}'.format(i))
+
+    for i in xrange(SAMPLE_TIME):
+        g = one_step(g, n, m)
+        if i % max(n, m) == 0:
+            print('Sampling: {}'.format(i))
+            mag.append(np.sum(g.vs()["spin"]))
+            mag_abs.append(np.abs(mag[-1]))
+            energy.append(compute_energy(g))
+            inc.append(count_incompatible(g))
+            c_num.append(len(g.clusters()))
+            largest_c.append(len(max(g.clusters(), key=lambda clust: len(clust))))
+            k_max.append(max(g.degree()))
+            for x, _, y in g.degree_distribution().bins():
+                k_dist[x] += y
+
+    return g, np.array(mag, dtype=float) / n, np.array(mag_abs, dtype=float) / n, \
+           np.array(energy, dtype=float) / (n * m), np.array(inc, dtype=float) / m, \
+           np.array(c_num, dtype=float) / n, np.array(largest_c, dtype=float) / n, np.array(k_max, dtype=float) / n, \
+           k_dist
 
 
 if __name__ == '__main__':
     graph = initialize_graph(N, M)
 
     start = time.time()
-    graph, mag = main_loop(graph, N, M, T)
+    graph, mag, mag_abs, energy, inc, c_num, largest_c, k_max, k_dist = main_loop(graph, N, M)
     end = time.time()
 
-    with open('magnetization2.csv', 'wb') as csvfile:
-        writer = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['index'] + [i for i in xrange(len(mag))])
-        writer.writerow(['value'] + mag)
+    print('Magnetization: {} +- {}'.format(np.abs(np.mean(mag)), np.std(mag)))
+    print('Magnetization abs: {} +- {}'.format(np.mean(mag_abs), np.std(mag_abs)))
+    print('Energy: {} +- {}'.format(np.mean(energy), np.std(energy)))
+    print('Incompatible links: {} +- {}'.format(np.mean(inc), np.std(inc)))
+    print('Largest component: {} +- {}'.format(np.mean(largest_c), np.std(largest_c)))
+    print('Number of components: {} +- {}'.format(np.mean(c_num), np.std(c_num)))
+    print('Maximal degree: {} +- {}'.format(np.mean(k_max), np.std(k_max)))
 
-    print("Main loop finished in {} s.".format(end - start))
+    with open('k_dist_N{}_M{}_T{}_GA{}_PH{}.csv'.format(N, M, T, GAMMA, PHI), 'wb') as csvfile:
+        writer = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['k'] + [k for k in k_dist.keys()])
+        writer.writerow(['y'] + [num for num in k_dist.values()])
+
+    graph.write_pickle('graph_N{}_M{}_T{}_GA{}_PH{}.ig'.format(N, M, T, GAMMA, PHI))
+
+    print("Main loop finished in {} min.".format(round((end - start)/60.0), 1))
