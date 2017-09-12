@@ -90,14 +90,14 @@ double energy_change_gamma(igraph_t *graph, int old_from, int old_to, int new_fr
  
  
 double energy_change_alpha_spin(igraph_t *graph, int v_index, igraph_vector_t *neigs, int spin_change,
-                                int *spins, double alpha);
+                                int *spins, double alpha, double av_k);
 /*
  * Calculates the change in hamiltonian after spin filpping. TODO add description
  */
  
  
 double energy_change_alpha_egde(igraph_t *graph, int old_from, int old_to, int new_from, int new_to,
-                                int *spins, double alpha);
+                                int *spins, double alpha, double av_k);
 /*
  * Calculates the change in hamiltonian after edge rewiring. TODO add description
  */

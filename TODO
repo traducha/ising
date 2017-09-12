@@ -6,14 +6,16 @@ DO PUSZCZENIA:
 
 DO DOPISANIA:
 
-- usunąć losowanie czy przelaczyc krawedz czy spin??
+- wersja z unormowanym stopniem
+
+- liczenie korelacji stopnia
+
+- samplowanie po przebiegach nie czasie
 
 - funkcja do zrobienia wykresow fazowych 2D, czyli puszczenie symulacji pare razy dla roznych wartosci fi i gamma
 
 - testy czy funckje zbierajace wielkosci na wykresy sa poprawne
 
-- wersja z unormowanym stopniem
-
-- skrypt w pythonie do zapuszczenia symulacji dla pojedynczego punktu (jedna wartosc temp.), żeby zebrac rozklad stopnia i narysowac graf
+- usunąć losowanie czy przelaczyc krawedz czy spin??
 
 - wersja hamiltonianu Tomka

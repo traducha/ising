@@ -7,11 +7,11 @@
 
 
 const int T = 100000;  // thermalization time
-const int SAMPLE_TIME = 200000;  // time window to average mag ang energy over (after thermalization)
+const int SAMPLE_TIME = 80000;  // time window to average mag ang energy over (after thermalization)
 const int N = 100;  // number of nodes
 const int M = 300;  // number of edges <k>=2*M/N, c=M/N
 const double GAMMA = 2.0;  // power of the degree in hamiltonian (1.0 is neutral): -{sum_over_i} k_i^gamma
-const double ALPHA = 1.0;  // power of Jij (0.0 is neutral)
+const double ALPHA = 2.0;  // power of Jij (0.0 is neutral)
 const double J = 1.0;  // J in hamiltonian
 const double h = 0.0;  // h in hamiltonian
 const double FI = 0.5; // probability of switching edge instead of spin
@@ -20,7 +20,7 @@ const double FI_MAX = 0.5;
 const int FI_STEPS = 1;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
-const double MAX_TEMP = 300.0;  // max temperature
+const double MAX_TEMP = 150.0;  // max temperature 0.004
 const int TEMP_STEPS = 100;  // number of values for temperature
 
 
@@ -143,7 +143,7 @@ void algorithm_two(igraph_t *graph, int *spins, int nodes, int edges, int *mag,
         // spin switching
         igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
             delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
-                                             spins, ALPHA);
+                                             spins, ALPHA, 2.0 * edges / nodes);
             delta +=  h * 2 * spins[v_index];
         if (delta <= 0.0)
         {
@@ -166,7 +166,7 @@ void algorithm_two(igraph_t *graph, int *spins, int nodes, int edges, int *mag,
         new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
         
         delta = energy_change_alpha_egde(graph, (int) e_from, (int) e_to, new_e[0], new_e[1],
-                                             spins, ALPHA);
+                                             spins, ALPHA, 2.0 * edges / nodes);
         delta += energy_change_gamma(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
         r = rand();
         if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
@@ -232,7 +232,7 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
             delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
-                                             spins, ALPHA);
+                                             spins, ALPHA, 2.0 * edges / nodes);
             delta +=  h * 2 * spins[v_index]; 
             if (delta <= 0.0)
             {
@@ -257,7 +257,7 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
             new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
             
             delta = energy_change_alpha_egde(graph, (int) e_from, (int) e_to, new_e[0], new_e[1],
-                                             spins, ALPHA);
+                                             spins, ALPHA, 2.0 * edges / nodes);
             delta += energy_change_gamma(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
             r = rand();
             if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))
@@ -330,7 +330,7 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
             delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
-                                             spins, ALPHA);
+                                             spins, ALPHA, 2.0 * edges / nodes);
             delta +=  h * 2 * spins[v_index];
             if (delta <= 0.0)
             {
@@ -355,7 +355,7 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
             new_e = draw_new_edge(graph, nodes, (int) e_from, (int) e_to);
             
             delta = energy_change_alpha_egde(graph, (int) e_from, (int) e_to, new_e[0], new_e[1],
-                                             spins, ALPHA);
+                                             spins, ALPHA, 2.0 * edges / nodes);
             delta += energy_change_gamma(graph, (int) e_from, (int) e_to, new_e[0], new_e[1], GAMMA);
             r = rand();
             if (delta <= 0.0 || r / RAND_MAX < exp(- beta * delta))

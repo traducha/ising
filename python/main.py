@@ -7,15 +7,15 @@ from collections import OrderedDict
 from pprint import pprint
 
 
-THERMAL = 50000  # min 20000 for gamma, 50000 for phi
-SAMPLE_TIME = 100000
 N = 100
 M = 300
-h = 0.0
-T = 600.0  # 1.0 175.0 200.0 400.0 600.0
+T = 24.49  # 1.0 175.0 200.0 400.0 600.0
+GAMMA = 2.0
+PHI = 0.0  # or alpha
+
+THERMAL = 50000  # min 20000 for gamma, 50000 for phi
+SAMPLE_TIME = 1000000
 B = 1.0 / T
-GAMMA = 1.0
-PHI = 1.0  # or alpha
 
 
 def initialize_graph(n, m):
@@ -213,11 +213,11 @@ if __name__ == '__main__':
     print('Number of components: {} +- {}'.format(np.mean(c_num), np.std(c_num)))
     print('Maximal degree: {} +- {}'.format(np.mean(k_max), np.std(k_max)))
 
-    with open('k_dist_N{}_M{}_T{}_GA{}_PH{}.csv'.format(N, M, T, GAMMA, PHI), 'wb') as csvfile:
+    with open('data/k_dist_N{}_M{}_T{}_GA{}_PH{}.csv'.format(N, M, T, GAMMA, PHI), 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['k'] + [k for k in k_dist.keys()])
         writer.writerow(['y'] + [num for num in k_dist.values()])
 
-    graph.write_pickle('graph_N{}_M{}_T{}_GA{}_PH{}.ig'.format(N, M, T, GAMMA, PHI))
+    graph.write_pickle('data/graph_N{}_M{}_T{}_GA{}_PH{}.ig'.format(N, M, T, GAMMA, PHI))
 
     print("Main loop finished in {} min.".format(round((end - start)/60.0), 1))
