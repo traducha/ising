@@ -20,7 +20,7 @@ const double FI_MAX = 0.5;
 const int FI_STEPS = 1;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
-const double MAX_TEMP = 120.0;  // max temperature 0.004
+const double MAX_TEMP = 40.0;  // max temperature 0.004
 const int TEMP_STEPS = 100;  // number of values for temperature
 
 
@@ -700,15 +700,8 @@ void tests()
     return;
 }
 
-
-int main(void)
+void alpha_diagram()
 {
-    srand(time(NULL));
-    
-    //compare_thermalization();
-    //phase_diagram_two_over_fi();
-    //tests();
-
     const double ALPHA_MIN = 0.0;
     const double ALPHA_MAX = 2.0;
     const int ALPHA_STEPS = 100;
@@ -720,5 +713,34 @@ int main(void)
         alpha_array[i] = ALPHA_MIN + ((ALPHA_MAX - ALPHA_MIN) / ALPHA_STEPS) * i;
         phase_diagram_two(FI, alpha_array[i], GAMMA);
     }
+}
+
+void gamma_diagram()
+{
+    const double GAMMA_MIN = 0.0;
+    const double GAMMA_MAX = 2.0;
+    const int GAMMA_STEPS = 100;
+    double gamma_array[GAMMA_STEPS];
+
+    int i;
+    for (i = 0; i < GAMMA_STEPS; i++)
+    {
+        gamma_array[i] = GAMMA_MIN + ((GAMMA_MAX - GAMMA_MIN) / GAMMA_STEPS) * i;
+        phase_diagram_two(FI, ALPHA, gamma_array[i]);
+    }
+}
+
+int main(void)
+{
+    srand(time(NULL));
+    
+    //compare_thermalization();
+    //phase_diagram_two_over_fi();
+    //tests();
+    //phase_diagram_two(FI, alpha_array[i], GAMMA);
+
+    //alpha_diagram();
+    gamma_diagram();
+
     return 0;
 }
