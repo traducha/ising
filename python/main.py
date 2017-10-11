@@ -5,12 +5,13 @@ import numpy as np
 import csv
 from collections import OrderedDict
 from pprint import pprint
+from matplotlib import pyplot as plt
 
 
 N = 100
 M = 300
-T = 24.49  # 1.0 175.0 200.0 400.0 600.0
-GAMMA = 2.0
+T = 10.0  # 1.0 175.0 200.0 400.0 600.0
+GAMMA = 1.0
 PHI = 0.0  # or alpha
 
 THERMAL = 50000  # min 20000 for gamma, 50000 for phi
@@ -198,7 +199,7 @@ def main_loop(g, n, m):
            k_dist
 
 
-if __name__ == '__main__':
+def plot_degree_dist():
     graph = initialize_graph(N, M)
 
     start = time.time()
@@ -221,3 +222,72 @@ if __name__ == '__main__':
     graph.write_pickle('data/graph_N{}_M{}_T{}_GA{}_PH{}.ig'.format(N, M, T, GAMMA, PHI))
 
     print("Main loop finished in {} min.".format(round((end - start)/60.0), 1))
+
+
+def plot_thermalization(g, n, m, times):
+    mag, mag_abs, energy, inc, c_num, largest_c, k_max, corr, time_step = [], [], [], [], [], [], [], [], []
+
+    for i in xrange(times):
+        g = one_step(g, n, m)
+        if i % 100 == 0:
+            print('Step: {}'.format(i))
+            mag.append(np.sum(g.vs()["spin"]))
+            mag_abs.append(np.abs(mag[-1]))
+            energy.append(compute_energy(g))
+            inc.append(count_incompatible(g))
+            c_num.append(len(g.clusters()))
+            largest_c.append(len(max(g.clusters(), key=lambda clust: len(clust))))
+            k_max.append(max(g.degree()))
+            corr.append(g.assortativity_degree(directed=False))
+            time_step.append(i)
+
+    mag_abs, = plt.plot(time_step, np.array(mag_abs, dtype=float) / n, label='m_abs')
+    inc, = plt.plot(time_step, np.array(inc, dtype=float) / m, label='inc')
+    c_num, = plt.plot(time_step, np.array(c_num, dtype=float) / n, label='N_c')
+    largest_c, = plt.plot(time_step, np.array(largest_c, dtype=float) / n, label='S')
+    k_max, = plt.plot(time_step, np.array(k_max, dtype=float) / n, label='k_max')
+    corr, = plt.plot(time_step, corr, label='corr')
+
+    handles = [mag_abs, inc, c_num, largest_c, k_max, corr]
+    plt.legend(handles=handles, fontsize=7)
+    plt.xlabel('time step')
+    plt.ylabel('order param')
+    plt.savefig('plots/therm_N{}_M{}_GA{}_PHI{}_T{}.png'.format(n, m, GAMMA, PHI, T), format='png')
+    plt.clf()
+
+    plt.plot(time_step, np.array(energy, dtype=float) / (n * m))
+    plt.xlabel('time step')
+    plt.ylabel('energy')
+    plt.savefig('plots/energy_therm_N{}_M{}_GA{}_PHI{}_T{}.png'.format(n, m, GAMMA, PHI, T), format='png')
+    plt.clf()
+
+
+def plot_therm_multi():
+    times = 100000
+    global T
+    global B
+    global GAMMA
+    global PHI
+    GAMMA = 1.0
+    PHI = 0.0
+
+    for t in np.linspace(0, 60, 6):
+        for f in np.linspace(0, 2, 6):
+            T = t
+            B = 1.0 / t
+            PHI = f
+            graph = initialize_graph(N, M)
+            plot_thermalization(graph, N, M, times)
+
+    for t in np.linspace(0, 60, 6):
+        for g in np.linspace(0, 3, 6):
+            T = t
+            B = 1.0 / t
+            GAMMA = g
+            graph = initialize_graph(N, M)
+            plot_thermalization(graph, N, M, times)
+
+
+if __name__ == '__main__':
+    # plot_degree_dist()
+    plot_therm_multi()

@@ -98,7 +98,7 @@ void algorithm_one(igraph_t *graph, int *spins, int nodes, int edges,
             VECTOR(edges_vector)[1] = v_to_new;
             igraph_add_edges(graph, &edges_vector, 0);
         }
-        
+
 //        printf("(%d %li) -> (%li ) \n\n", e_index, e_from, e_to);
 //        igraph_get_edgelist(graph, &edges_vector, 0);
 //        print_vector_igraph(&edges_vector);
@@ -665,6 +665,9 @@ int phase_diagram_two(double fi, double alpha, double gamma)
 
 
 void phase_diagram_two_over_fi(void)
+/*
+ * COLD function to check behavior in FI
+ */
 {
     double fi;
     
@@ -679,6 +682,9 @@ void phase_diagram_two_over_fi(void)
 
 
 void tests()
+/*
+ * For testing stuff, contents changes...
+ */
 {
     char *test;
     test = malloc(100 * sizeof(char));
@@ -700,11 +706,15 @@ void tests()
     return;
 }
 
+
 void alpha_diagram()
+/*
+ * Runs simulation for many values of alpha parameter for 2D phase diagram.
+ */
 {
     const double ALPHA_MIN = 0.0;
     const double ALPHA_MAX = 2.0;
-    const int ALPHA_STEPS = 100;
+    const int ALPHA_STEPS = 101;
     double alpha_array[ALPHA_STEPS];
 
     int i;
@@ -715,11 +725,15 @@ void alpha_diagram()
     }
 }
 
+
 void gamma_diagram()
+/*
+ * Runs simulation for many values of gamma parameter for 2D phase diagram.
+ */
 {
     const double GAMMA_MIN = 0.0;
-    const double GAMMA_MAX = 2.0;
-    const int GAMMA_STEPS = 100;
+    const double GAMMA_MAX = 3.0;
+    const int GAMMA_STEPS = 101;
     double gamma_array[GAMMA_STEPS];
 
     int i;
@@ -730,12 +744,11 @@ void gamma_diagram()
     }
 }
 
+
 int main(void)
 {
     srand(time(NULL));
     
-    //compare_thermalization();
-    //phase_diagram_two_over_fi();
     //tests();
     //phase_diagram_two(FI, alpha_array[i], GAMMA);
 
