@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import igraph as ig
 import time
 from numpy.random import random as rand
@@ -147,7 +150,7 @@ def one_step(g, n, m):
     delta = energy_change_edge_gamma(g, v_from, v_to, new_from, new_to)
     delta += energy_change_edge_alpha(g, edge_list, v_from, v_to, new_from, new_to)
     if delta <= 0.0 or rand() < np.exp(- B * delta):
-        g.delete_edges((v_from, v_to))
+        g.delete_edges([(v_from, v_to)])
         g.add_edges([(new_from, new_to)])
     return g
 
@@ -261,6 +264,17 @@ def plot_thermalization(g, n, m, times):
     plt.savefig('plots/energy_therm_N{}_M{}_GA{}_PHI{}_T{}.png'.format(n, m, GAMMA, PHI, T), format='png')
     plt.clf()
 
+    for i in xrange(len(g.vs())):
+        if g.vs(i)['spin'][0][0] == 1:
+            g.vs(i)['color'] = '#26A57C'
+        else:
+            g.vs(i)['color'] = '#DA3A49'
+    g.es["width"] = 1.5
+    g.vs["size"] = 16
+    lay = ig.Graph.layout_kamada_kawai(g)
+    ig.plot(g, target='plots/graph_N{}_M{}_GA{}_PHI{}_T{}.png'.format(n, m, GAMMA, PHI, T))
+    ig.plot(g, layout=lay, target='plots/graph_kk_N{}_M{}_GA{}_PHI{}_T{}.png'.format(n, m, GAMMA, PHI, T))
+
 
 def plot_therm_multi():
     times = 100000
@@ -271,16 +285,19 @@ def plot_therm_multi():
     GAMMA = 1.0
     PHI = 0.0
 
-    for t in np.linspace(0, 60, 6):
-        for f in np.linspace(0, 2, 6):
+    for t in np.linspace(0.1, 60, 8):
+        for f in np.linspace(0, 2, 8):
             T = t
             B = 1.0 / t
             PHI = f
             graph = initialize_graph(N, M)
             plot_thermalization(graph, N, M, times)
 
-    for t in np.linspace(0, 60, 6):
-        for g in np.linspace(0, 3, 6):
+    GAMMA = 1.0
+    PHI = 0.0
+
+    for t in np.linspace(0.1, 60, 8):
+        for g in np.linspace(0, 3, 8):
             T = t
             B = 1.0 / t
             GAMMA = g

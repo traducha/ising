@@ -9,18 +9,18 @@ import pprint
 
 
 N = 100
-M = 300
-G = '2.000000'
-A = '1.000000'
-y_values = np.arange(100) / 50.0
-y_var = 'A'  # 'A' or 'G'
-temp_lim = [0, 120]
+M = 200
+G = '1.000000'
+A = '0.000000'
+temp_lim = [0, 60]
 y_lim = [0, 2]
+y_values = np.arange(101) * float(y_lim[1]) / 101.0
+y_var = 'A'  # 'A' or 'G'
 aspect = temp_lim[1] / y_lim[1]
 
 quants = ['mag', 'mag_abs', 'energy', 'incompatible', 'largest_clust', 'clust_num', 'largest_degree', 'degree_corr']
 
-os.chdir("../res_phi2")
+os.chdir("../res_c2/res_phi")
 
 
 for q in quants:
@@ -31,9 +31,9 @@ for q in quants:
         g = G
         a = A
         if y_var == 'A':
-            a = str(y).ljust(8, '0')
+            a = str(round(y, 6)).ljust(8, '0')
         elif y_var == 'G':
-            g = str(y).ljust(8, '0')
+            g = str(round(y, 6)).ljust(8, '0')
         else:
             raise
 
