@@ -6,12 +6,12 @@
 #include "tools.h"
 
 
-const int T = 100000;  // thermalization time
-const int SAMPLE_TIME = 400000;  // time window to average mag ang energy over (after thermalization)
-const int N = 100;  // number of nodes
-const int M = 300;  // number of edges <k>=2*M/N, c=M/N
+const int T = 2000000;  // thermalization time
+const int SAMPLE_TIME = 500000;  // time window to average mag ang energy over (after thermalization)
+const int N = 1000;  // number of nodes
+const int M = 3000;  // number of edges <k>=2*M/N, c=M/N
 const double GAMMA = 1.0;  // power of the degree in hamiltonian (1.0 is neutral): -{sum_over_i} k_i^gamma
-const double ALPHA = 1.0;  // power of Jij (0.0 is neutral)
+const double ALPHA = 0.0;  // power of Jij (0.0 is neutral)
 const double J = 1.0;  // J in hamiltonian
 const double h = 0.0;  // h in hamiltonian
 const double FI = 0.5; // probability of switching edge instead of spin
@@ -20,8 +20,8 @@ const double FI_MAX = 0.5;
 const int FI_STEPS = 1;
 const double B = 1.0;  // 1/kbT inverse of the temperature
 const double MIN_TEMP = 0.1;  // min temperature
-const double MAX_TEMP = 40.0;  // max temperature 0.004
-const int TEMP_STEPS = 100;  // number of values for temperature
+const double MAX_TEMP = 400.0;  // max temperature 0.004
+const int TEMP_STEPS = 80;  // number of values for temperature
 
 
 void algorithm_one(igraph_t *graph, int *spins, int nodes, int edges,
@@ -227,9 +227,6 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
         r = rand();
         e_index = (int)(((edges - 1) * r / RAND_MAX) + 0.5);
 
-        r = rand();
-        if (r / RAND_MAX > proper_fi)
-        {
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
             delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
@@ -248,9 +245,7 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
                 }
                 
             }
-        }
-        else
-        {
+
             // edge rewiring
             igraph_edge(graph, e_index, &e_from, &e_to);
             
@@ -274,25 +269,27 @@ void algorithm_two_complex(igraph_t *graph, int *spins, int nodes, int edges, in
                 VECTOR(edges_vector)[1] = new_e[1];
                 igraph_add_edges(graph, &edges_vector, 0);
             }
-        }
-        
-        // compute magnetization, internal energy, number and size of clusters, incompatible links
-        igraph_get_edgelist(graph, &edges_vector, 0);
-        energy[i] = compute_energy(graph, nodes, &edges_vector, spins, alpha, h, gamma);
-        mag[i] = sum_array_int(spins, nodes);
-        mag_abs[i] = abs(mag[i]);
-        
-        igraph_clusters(graph, NULL, &clusters, &tmp_clust_num, IGRAPH_WEAK);
-        clust_num[i] = tmp_clust_num;
-        largest_clust[i] = (int) igraph_vector_max(&clusters);
-        
-        incompatible[i] = count_incompatible_links(&edges_vector, spins);
-        
-        igraph_degree(graph, &neigs, igraph_vss_all(), IGRAPH_ALL, IGRAPH_LOOPS);
-        largest_degree[i] = (int) igraph_vector_max(&neigs);
 
-        igraph_assortativity_degree(graph, &degree_correlation, /*directed=*/ 0);
-        degree_corr[i] = (double) degree_correlation;
+        if (i % 100 == 0)
+        {
+            // compute magnetization, internal energy, number and size of clusters, incompatible links
+            igraph_get_edgelist(graph, &edges_vector, 0);
+            energy[i/100] = compute_energy(graph, nodes, &edges_vector, spins, alpha, h, gamma);
+            mag[i/100] = sum_array_int(spins, nodes);
+            mag_abs[i/100] = abs(mag[i/100]);
+
+            igraph_clusters(graph, NULL, &clusters, &tmp_clust_num, IGRAPH_WEAK);
+            clust_num[i/100] = tmp_clust_num;
+            largest_clust[i/100] = (int) igraph_vector_max(&clusters);
+
+            incompatible[i/100] = count_incompatible_links(&edges_vector, spins);
+
+            igraph_degree(graph, &neigs, igraph_vss_all(), IGRAPH_ALL, IGRAPH_LOOPS);
+            largest_degree[i/100] = (int) igraph_vector_max(&neigs);
+
+            igraph_assortativity_degree(graph, &degree_correlation, /*directed=*/ 0);
+            degree_corr[i/100] = (double) degree_correlation;
+        }
     }
     
     igraph_vector_destroy(&neigs);
@@ -328,9 +325,6 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
         r = rand();
         e_index = (int)(((edges - 1) * r / RAND_MAX) + 0.5);
 
-        r = rand();
-        if (r / RAND_MAX > proper_fi)
-        {
             // spin switching
             igraph_neighbors(graph, &neigs, v_index, IGRAPH_ALL);
             delta = energy_change_alpha_spin(graph, v_index, &neigs, -2 * spins[v_index], // -2 * spin is the possible energy change
@@ -349,9 +343,7 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
                 }
                 
             }
-        }
-        else
-        {
+
             // edge rewiring
             igraph_edge(graph, e_index, &e_from, &e_to);
             
@@ -375,7 +367,6 @@ void algorithm_two_thermalize(igraph_t *graph, int *spins, int nodes, int edges,
                 VECTOR(edges_vector)[1] = new_e[1];
                 igraph_add_edges(graph, &edges_vector, 0);
             }
-        }
     }
     
     igraph_vector_destroy(&neigs);
@@ -574,43 +565,43 @@ int phase_diagram_two(double fi, double alpha, double gamma)
         algorithm_two_thermalize(&graph, spins, N, M, T, 1.0/temp[i], fi, alpha, gamma);
         
         // actual calculations
-        mag = calloc(SAMPLE_TIME, sizeof(int));
-        mag_abs = calloc(SAMPLE_TIME, sizeof(int));
-        incompatible = calloc(SAMPLE_TIME, sizeof(int));
-        clust_num = calloc(SAMPLE_TIME, sizeof(int));
-        largest_clust = calloc(SAMPLE_TIME, sizeof(int));
-        largest_degree = calloc(SAMPLE_TIME, sizeof(int));
-        degree_corr = malloc(SAMPLE_TIME * sizeof(double));
-        energy = malloc(SAMPLE_TIME * sizeof(double));
+        mag = calloc(SAMPLE_TIME / 100, sizeof(int));
+        mag_abs = calloc(SAMPLE_TIME / 100, sizeof(int));
+        incompatible = calloc(SAMPLE_TIME / 100, sizeof(int));
+        clust_num = calloc(SAMPLE_TIME / 100, sizeof(int));
+        largest_clust = calloc(SAMPLE_TIME / 100, sizeof(int));
+        largest_degree = calloc(SAMPLE_TIME / 100, sizeof(int));
+        degree_corr = malloc(SAMPLE_TIME / 100 * sizeof(double));
+        energy = malloc(SAMPLE_TIME / 100 * sizeof(double));
 
         algorithm_two_complex(&graph, spins, N, M, mag, mag_abs, incompatible, energy,
                       clust_num, largest_clust, largest_degree, degree_corr, SAMPLE_TIME, 1.0/temp[i], fi, alpha, gamma);
 
         // computing results
-        tmp = avg_int(mag, SAMPLE_TIME);
+        tmp = avg_int(mag, SAMPLE_TIME / 100);
         mag_avg[i] = abs(tmp);  // take absolute value of magnetization
-        mag_std[i] = std_int(mag, SAMPLE_TIME, tmp);
+        mag_std[i] = std_int(mag, SAMPLE_TIME / 100, tmp);
         
-        mag_abs_avg[i] = avg_int(mag_abs, SAMPLE_TIME);
-        mag_abs_std[i] = std_int(mag_abs, SAMPLE_TIME, mag_abs_avg[i]);
+        mag_abs_avg[i] = avg_int(mag_abs, SAMPLE_TIME / 100);
+        mag_abs_std[i] = std_int(mag_abs, SAMPLE_TIME / 100, mag_abs_avg[i]);
         
-        energy_avg[i] = avg_double(energy, SAMPLE_TIME);
-        energy_std[i] = std_double(energy, SAMPLE_TIME, energy_avg[i]);
+        energy_avg[i] = avg_double(energy, SAMPLE_TIME / 100);
+        energy_std[i] = std_double(energy, SAMPLE_TIME / 100, energy_avg[i]);
         
-        incompatible_avg[i] = avg_int(incompatible, SAMPLE_TIME);
-        incompatible_std[i] = std_int(incompatible, SAMPLE_TIME, incompatible_avg[i]);
+        incompatible_avg[i] = avg_int(incompatible, SAMPLE_TIME / 100);
+        incompatible_std[i] = std_int(incompatible, SAMPLE_TIME / 100, incompatible_avg[i]);
         
-        largest_clust_avg[i] = avg_int(largest_clust, SAMPLE_TIME);
-        largest_clust_std[i] = std_int(largest_clust, SAMPLE_TIME, largest_clust_avg[i]);
+        largest_clust_avg[i] = avg_int(largest_clust, SAMPLE_TIME / 100);
+        largest_clust_std[i] = std_int(largest_clust, SAMPLE_TIME / 100, largest_clust_avg[i]);
         
-        clust_num_avg[i] = avg_int(clust_num, SAMPLE_TIME);
-        clust_num_std[i] = std_int(clust_num, SAMPLE_TIME, clust_num_avg[i]);
+        clust_num_avg[i] = avg_int(clust_num, SAMPLE_TIME / 100);
+        clust_num_std[i] = std_int(clust_num, SAMPLE_TIME / 100, clust_num_avg[i]);
         
-        largest_degree_avg[i] = avg_int(largest_degree, SAMPLE_TIME);
-        largest_degree_std[i] = std_int(largest_degree, SAMPLE_TIME, largest_degree_avg[i]);
+        largest_degree_avg[i] = avg_int(largest_degree, SAMPLE_TIME / 100);
+        largest_degree_std[i] = std_int(largest_degree, SAMPLE_TIME / 100, largest_degree_avg[i]);
 
-        degree_corr_avg[i] = avg_double(degree_corr, SAMPLE_TIME);
-        degree_corr_std[i] = std_double(degree_corr, SAMPLE_TIME, degree_corr_avg[i]);
+        degree_corr_avg[i] = avg_double(degree_corr, SAMPLE_TIME / 100);
+        degree_corr_std[i] = std_double(degree_corr, SAMPLE_TIME / 100, degree_corr_avg[i]);
                 
         // cleaning
         free(mag);
@@ -714,7 +705,7 @@ void alpha_diagram()
 {
     const double ALPHA_MIN = 0.0;
     const double ALPHA_MAX = 2.0;
-    const int ALPHA_STEPS = 101;
+    const int ALPHA_STEPS = 80;
     double alpha_array[ALPHA_STEPS];
 
     int i;
@@ -733,7 +724,7 @@ void gamma_diagram()
 {
     const double GAMMA_MIN = 0.0;
     const double GAMMA_MAX = 3.0;
-    const int GAMMA_STEPS = 101;
+    const int GAMMA_STEPS = 80;
     double gamma_array[GAMMA_STEPS];
 
     int i;

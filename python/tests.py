@@ -5,65 +5,122 @@ from scipy.special import binom
 from scipy.special import hyp2f1
 import numpy as np
 import math
+import os
+import csv
+from mean_field import mean_field
+from mean_field_phi import mean_field_phi
 
 
-N = 20.0
-L = 40.0
-J = 1.0
-h = 0.0
+N = 100.0
+M = 300.0
+t_max = 60
 
+gammas = np.linspace(0.0, 3.0, 100)
+temp = np.linspace(0.1, t_max, 100)
 
-def Zn(B, n):
-    m = (n - (N - n)) / N
-    exp_ = np.exp(L * J * B + N * h * m * B)
-    
-    au = n * (N - n)
-    ae = 0.5 * (n * (n - 1) + (N - n) * (N - n - 1))
-    frac = (math.factorial(ae)) / (math.factorial(L) * math.factorial(ae - L))
+trans_temp = []
+first = True
 
-    fi = hyp2f1(-au, -L, 1 + ae - L, np.exp(-2 * J * B))
-    
-    return exp_ * frac * fi
+for g in gammas:
+    _, degrees = mean_field(N, M, g, temp)
+    t = 0.0
+    again = True
+    once = False
+    for i, degree in enumerate(degrees):
+        if degree > 55 and again:
+            once = True
+            t = temp[i]
+            if i == len(degrees) - 1:
+                if first is False:
+                    t = 1000
+                else:
+                    first = False
+        elif once:
+            again = False
+    trans_temp.append(t)
 
+final_g, final_t = [], []
+for i, t in enumerate(trans_temp):
+    if 0.0 < t < 1000:
+        final_t.append(t)
+        final_g.append(gammas[i])
 
-def Z(B):
-    return np.sum([binom(N, i) * Zn(B, i) for i in xrange(0, int(N+1))])
+plt.plot(final_t, final_g, color='#FFFF33', linewidth=2)
 
+phis = np.linspace(0.0, 2.0, 1000)
+temp = np.linspace(0.1, t_max, 1000)
 
-def Zn_po_h(B, n):
-    m = (n - (N - n)) / N
-    return Zn(B, n) *  N * m * B
+trans_temp = []
+first = True
 
+for p in []:#phis:
+    _, degrees = mean_field_phi(N, M, p, temp)
+    t = 0.0
+    for i, degree in enumerate(degrees):
+        if degree < 18:
+            t = temp[i]
+            break
+    # print p, t
+    # print degrees
+    trans_temp.append(t)
 
-def Z_po_h(B):
-    return np.sum([binom(N, i) * Zn_po_h(B, i) for i in xrange(0, int(N+1))])
+final_p, final_t = [], []
+for i, t in enumerate(trans_temp):
+    if 0.0 < t < 1000:
+        final_t.append(t)
+        final_p.append(phis[i])
 
+# plt.plot(final_t, final_p, color='#FFFF33', linewidth=2)
 
-def mag(B):
-    return Z_po_h(B) / (B * Z(B))
+# plt.plot([0, t_max], [1.477, 1.477], color='#006600', linewidth=4)
 
+G = '1.000000'
+A = '0.000000'
+temp_lim = [0, t_max]
+y_lim = [0, 3]
+y_values = np.arange(101) * float(y_lim[1]) / 101.0
+y_var = 'G'  # 'A' or 'G'
+aspect = temp_lim[1] / y_lim[1]
 
-temp = np.linspace(0.1, 10.0, 10)
-magnet = [mag(1.0/t) * 10000000000000000 for t in temp]  # 10000000000000000 żeby wykres lepiej wyglądał
+os.chdir("../res_c{}/res_gamma".format(int(M/N)))
+quant = 'largest_degree'  # ['mag', 'mag_abs', 'energy', 'incompatible', 'largest_clust', 'clust_num', 'largest_degree', 'degree_corr']
 
-print temp
-print magnet
+if 1:
+    value_matrix = []
+    std_matrix = []
 
-plt.scatter(temp, magnet)
-plt.xlabel('Temp.')
-plt.ylabel('Mag.')
-plt.show()
-plt.clf()
+    for y in y_values:
+        g = G
+        a = A
+        if y_var == 'A':
+            a = str(round(y, 6)).ljust(8, '0')
+        elif y_var == 'G':
+            g = str(round(y, 6)).ljust(8, '0')
+        else:
+            raise
 
+        f_name = "{}_vs_B_N{}_L{}_J1.000000_h0.000000_FI0.500000_GA{}_AL{}.csv".format(quant, int(N), int(M), g, a)
+        # print f_name
+        with open(f_name, 'rb') as file:
+            x, value, std = csv.reader(file, delimiter=';', quotechar='|')
 
+        for i in xrange(1, len(x)):
+            x[i] = float(x[i])
+            value[i] = float(value[i])
+            std[i] = float(std[i])
 
+        value_matrix.append(value[1:])
+        std_matrix.append(std[1:])
 
-
-
-
-
-
-
+    im = plt.imshow(value_matrix, cmap=None, origin='lower', extent=temp_lim+y_lim, interpolation='none', aspect=aspect)
+    plt.colorbar(im)
+    plt.title('{} for $N={}, M={}$'.format(quant, N, M))
+    plt.xlabel('$T$')
+    plt.ylabel('$\phi$' if y_var == 'A' else '$\gamma$')
+    plt.show()
+    # plt.savefig('2D_{}_{}_{}{}.png'.format('PHI' if y_var == 'A' else 'GAMMA', quant,
+    #                                        'GA' if y_var == 'A' else 'AL', G if y_var == 'A' else A), format="png")
+    plt.clf()
 
 
 
