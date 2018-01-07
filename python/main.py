@@ -11,14 +11,14 @@ from pprint import pprint
 from matplotlib import pyplot as plt
 
 
-N = 100
-M = 300
-T = 10.0  # 1.0 175.0 200.0 400.0 600.0
+N = 500
+M = 1500
+T = 40.0  # 1.0 175.0 200.0 400.0 600.0
 GAMMA = 1.0
-PHI = 0.0  # or alpha
+PHI = 1.0  # or alpha
 
-THERMAL = 50000  # min 20000 for gamma, 50000 for phi
-SAMPLE_TIME = 1000000
+THERMAL = 100000  # min 20000 for gamma, 50000 for phi
+SAMPLE_TIME = 1000
 B = 1.0 / T
 
 
@@ -307,4 +307,11 @@ def plot_therm_multi():
 
 if __name__ == '__main__':
     # plot_degree_dist()
-    plot_therm_multi()
+    # plot_therm_multi()
+
+    graph = initialize_graph(N, M)
+    graph, mag, mag_abs, energy, inc, c_num, largest_c, k_max, k_dist = main_loop(graph, N, M)
+    # lay = ig.Graph.layout(g)
+    graph.write_pickle('data/graph_N{}_M{}_T{}_GA{}_PH{}.ig'.format(N, M, T, GAMMA, PHI))
+    lay = ig.Graph.layout_kamada_kawai(graph)
+    ig.plot(graph, layout=lay)

@@ -7,12 +7,12 @@ import csv
 from pprint import pprint
 mpl.rcParams['font.family'] = 'serif'
 
-N = 100
-M = 300
-T = 24.0
-GAMMA = 2.0
-PHI = 0.0
-temps = (24.49,)
+N = 500
+M = 1500
+T = 40.0
+GAMMA = 1.0
+PHI = 1.0
+temps = (40.0,)
 
 
 def poisson(k, lambda_):
@@ -72,21 +72,21 @@ def plot_graph(temp=T, save=False):
         if g.vs(i)['spin'][0][0] == 1:
             g.vs(i)['color'] = '#26A57C'
         else:
-            g.vs(i)['color'] = '#DA3A49'
+            g.vs(i)['color'] = '#26A57C'
     g.es["width"] = 1.5
-    g.vs["size"] = 16
+    g.vs["size"] = 12
 
     # lay = ig.Graph.layout(g)
     lay = ig.Graph.layout_kamada_kawai(g)
 
     if save:
         # possible formats .png, .pdf, .ps
-        ig.plot(g, layout=lay, target='plots/graph_N{}_M{}_T{}_GA{}_PH{}.png'.format(N, M, temp, GAMMA, PHI))
+        ig.plot(g, layout=lay, target='plots/graph3.pdf'.format(N, M, temp, GAMMA, PHI))
     else:
         ig.plot(g, layout=lay)
 
 
 if __name__ == '__main__':
     for t in temps:
-        plot_degree(temp=t, save=True)
+        # plot_degree(temp=t, save=True)
         plot_graph(temp=t, save=True)

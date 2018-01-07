@@ -6,26 +6,38 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.special as sp
 import pprint
-from mean_field import mean_field
+from mean_field_2A import mean_field as phi_mf
 import matplotlib as mpl
 mpl.rcParams['font.family'] = 'serif'
 
 
-n_list = [500, 1000, 2000, 4000]
-G = '1.000000'
-A = '0.700000'
+n_list = [500, 750, 1000]
+G = '2.000000'
+A = '0.000000'
 
-quants = ['energy', 'mag_abs', 'largest_degree', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
-names = ['$E$', r'$|m|$', r'$\langle k \rangle$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
+quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
+names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
-os.chdir("../res_scaling/phi")
+os.chdir("../res_scaling/gamma")
+phi_mean = phi_mf(1000.0, 3000.0, 0.7, np.linspace(0.1, 40.0, 1000))
 
+plt.figure(figsize=(9, 8))
 for j, q in enumerate(quants):
-    plt.figure(figsize=(9, 3))
-    plt.subplot(111)
-    for n in n_list:
+    if q == 'mag_abs':
+        ax1 = plt.subplot(311)
+        ax = ax1
+    elif q == 'largest_degree':
+        ax2 = plt.subplot(312, sharex=ax1)
+        ax = ax2
+    elif q == 'energy':
+        ax3 = plt.subplot(313, sharex=ax2)
+        ax = ax3
+    else:
+        continue
+
+    for w, n in enumerate(n_list):
         m = n * 3
-        norm = [1.0*m*n, 1.0*n, 1.0*n, 1.0*m, 1.0*n, 1.0*n, 1.0*n, 1.0]
+        norm = [1.0*n, 1.0*n, 1.0*m*n, 1.0*m, 1.0*n, 1.0*n, 1.0*n, 1.0]
         f_name = "{}_vs_B_N{}_L{}_J1.000000_h0.000000_FI0.500000_GA{}_AL{}.csv".format(q, n, m, G, A)
         alpha, gamma = float(A), float(G)
         with open(f_name, 'rb') as file:
@@ -36,11 +48,27 @@ for j, q in enumerate(quants):
             value[i] = float(value[i])
             std[i] = float(std[i])
 
-        plt.errorbar(x[1:], np.array(value[1:]) / norm[j], fmt='o')#, fillstyle='none')
+        ax.errorbar(x[1:], np.array(value[1:]) / norm[j], fmt='os^'[w], fillstyle='none')
 
-    plt.xlabel(r'$T = 1/ \beta$', fontsize=16)
-    plt.ylabel(names[j], fontsize=16)
-    plt.tight_layout()
-    # plt.show()
-    plt.savefig('/home/tomasz/Desktop/scaling/phi/a_{}.pdf'.format(q), format="pdf")
-    plt.clf()
+    if q in ['largest_degree']:
+        # ax.set_ylim([-0.1, 1.05])
+        ax.set_ylim([-0.1, 1.1])
+        # ax.plot(np.linspace(0.1, 40.0, 1000), phi_mean[1], color='black', linewidth=2)
+    if q in ['energy']:
+        # ax.set_ylim([-0.6, 0.09])
+        ax.set_ylim([-1.0, 0.1])
+        ax.set_xlabel(r'$T = 1/ \beta$', fontsize=16)
+        # ax.plot(np.linspace(0.1, 40.0, 1000), phi_mean[0], color='black', linewidth=2)
+    if q in ['mag_abs']:
+        # ax.set_ylim([0.01, 1.0])
+        ax.set_ylim([-0.01, 1.0])
+
+    ax.set_ylabel(names[j], fontsize=16)
+
+plt.setp(ax1.get_xticklabels(), visible=False)
+plt.setp(ax2.get_xticklabels(), visible=False)
+plt.tight_layout()
+plt.subplots_adjust(hspace=0.000)
+plt.show()
+# plt.savefig('/home/tomaszraducha/Pulpit/1D_gamma.pdf', format="pdf")
+plt.clf()

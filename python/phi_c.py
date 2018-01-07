@@ -9,8 +9,8 @@ import os
 import csv
 
 
-N = 100.0
-M = 300.0
+N = 1000.0
+M = 3000.0
 c = M / N
 nh = np.floor(c)
 n = 0.5 + np.sqrt(1.0 + 8.0 * M) / 2.0
