@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.special as sp
 import pprint
-from mean_field_2A import mean_field as phi_mf
+from mean_field_2a import mean_field_phi as phi_mf
+from mean_field_gamma import mean_field_gamma as gamma_mf
 import matplotlib as mpl
 mpl.rcParams['font.family'] = 'serif'
 
@@ -19,7 +20,7 @@ quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest
 names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
 os.chdir("../res_scaling/gamma")
-phi_mean = phi_mf(1000.0, 3000.0, 0.7, np.linspace(0.1, 40.0, 1000))
+g_mean = gamma_mf(1000.0, 3000.0, 2.0, np.linspace(0.1, 40.0, 1000))
 
 plt.figure(figsize=(9, 8))
 for j, q in enumerate(quants):
@@ -51,16 +52,13 @@ for j, q in enumerate(quants):
         ax.errorbar(x[1:], np.array(value[1:]) / norm[j], fmt='os^'[w], fillstyle='none')
 
     if q in ['largest_degree']:
-        # ax.set_ylim([-0.1, 1.05])
         ax.set_ylim([-0.1, 1.1])
-        # ax.plot(np.linspace(0.1, 40.0, 1000), phi_mean[1], color='black', linewidth=2)
+        # ax.plot(np.linspace(0.1, 40.0, 1000), g_mean[1], color='black', linewidth=2)
     if q in ['energy']:
-        # ax.set_ylim([-0.6, 0.09])
         ax.set_ylim([-1.0, 0.1])
         ax.set_xlabel(r'$T = 1/ \beta$', fontsize=16)
-        # ax.plot(np.linspace(0.1, 40.0, 1000), phi_mean[0], color='black', linewidth=2)
+        # ax.plot(np.linspace(0.1, 40.0, 1000), g_mean[0], color='black', linewidth=2)
     if q in ['mag_abs']:
-        # ax.set_ylim([0.01, 1.0])
         ax.set_ylim([-0.01, 1.0])
 
     ax.set_ylabel(names[j], fontsize=16)
@@ -70,5 +68,5 @@ plt.setp(ax2.get_xticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.000)
 plt.show()
-# plt.savefig('/home/tomaszraducha/Pulpit/1D_gamma.pdf', format="pdf")
+# plt.savefig('/home/tomasz/Desktop/1D_gamma.pdf', format="pdf")
 plt.clf()

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from matplotlib import rc
+rc('font', **{'family' :'serif'})
 import matplotlib.pyplot as plt
 from scipy.special import gamma as g
 from scipy.special import binom
@@ -12,7 +14,7 @@ from mean_field_phi import mean_field_phi
 
 
 N = 100.0
-M = 300.0
+M = 400.0
 t_max = 60
 
 gammas = np.linspace(0.0, 3.0, 100)
@@ -21,7 +23,7 @@ temp = np.linspace(0.1, t_max, 100)
 trans_temp = []
 first = True
 
-for g in gammas:
+for g in []:#gammas:
     _, degrees = mean_field(N, M, g, temp)
     t = 0.0
     again = True
@@ -45,7 +47,7 @@ for i, t in enumerate(trans_temp):
         final_t.append(t)
         final_g.append(gammas[i])
 
-plt.plot(final_t, final_g, color='#FFFF33', linewidth=2)
+# plt.plot(final_t, final_g, color='#FFFF33', linewidth=2)
 
 phis = np.linspace(0.0, 2.0, 1000)
 temp = np.linspace(0.1, t_max, 1000)
@@ -53,7 +55,7 @@ temp = np.linspace(0.1, t_max, 1000)
 trans_temp = []
 first = True
 
-for p in []:#phis:
+for p in phis:
     _, degrees = mean_field_phi(N, M, p, temp)
     t = 0.0
     for i, degree in enumerate(degrees):
@@ -70,19 +72,19 @@ for i, t in enumerate(trans_temp):
         final_t.append(t)
         final_p.append(phis[i])
 
-# plt.plot(final_t, final_p, color='#FFFF33', linewidth=2)
+plt.plot(final_t, final_p, color='#FFFF33', linewidth=2)
 
-# plt.plot([0, t_max], [1.477, 1.477], color='#006600', linewidth=4)
+plt.plot([0, t_max], [1.477, 1.477], color='#006600', linewidth=4)
 
 G = '1.000000'
 A = '0.000000'
 temp_lim = [0, t_max]
-y_lim = [0, 3]
+y_lim = [0, 2]
 y_values = np.arange(101) * float(y_lim[1]) / 101.0
-y_var = 'G'  # 'A' or 'G'
+y_var = 'A'  # 'A' or 'G'
 aspect = temp_lim[1] / y_lim[1]
 
-os.chdir("../res_c{}/res_gamma".format(int(M/N)))
+os.chdir("../res_c{}/res_phi".format(int(M/N)))
 quant = 'largest_degree'  # ['mag', 'mag_abs', 'energy', 'incompatible', 'largest_clust', 'clust_num', 'largest_degree', 'degree_corr']
 
 if 1:
@@ -114,12 +116,12 @@ if 1:
 
     im = plt.imshow(value_matrix, cmap=None, origin='lower', extent=temp_lim+y_lim, interpolation='none', aspect=aspect)
     plt.colorbar(im)
-    plt.title('{} for $N={}, M={}$'.format(quant, N, M))
-    plt.xlabel('$T$')
-    plt.ylabel('$\phi$' if y_var == 'A' else '$\gamma$')
-    plt.show()
-    # plt.savefig('2D_{}_{}_{}{}.png'.format('PHI' if y_var == 'A' else 'GAMMA', quant,
-    #                                        'GA' if y_var == 'A' else 'AL', G if y_var == 'A' else A), format="png")
+    # plt.title('{} for $N={}, M={}$'.format(quant, N, M))
+    plt.xlabel('$T$', fontsize=16)
+    plt.ylabel('$\phi$' if y_var == 'A' else '$\gamma$', fontsize=16)
+    # plt.show()
+    plt.savefig('/home/tomasz/Desktop/2D_{}_{}_{}{}.pdf'.format('PHI' if y_var == 'A' else 'GAMMA', quant,
+                                           'GA' if y_var == 'A' else 'AL', G if y_var == 'A' else A), format="pdf")
     plt.clf()
 
 
