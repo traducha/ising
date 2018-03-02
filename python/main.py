@@ -11,13 +11,13 @@ from pprint import pprint
 from matplotlib import pyplot as plt
 
 
-N = 500
-M = 1500
-T = 40.0  # 1.0 175.0 200.0 400.0 600.0
-GAMMA = 1.0
-PHI = 1.0  # or alpha
+N = 100
+M = 300
+T = 0.5  # 1.0 175.0 200.0 400.0 600.0
+GAMMA = 1.5
+PHI = 0.0  # or alpha
 
-THERMAL = 100000  # min 20000 for gamma, 50000 for phi
+THERMAL = 300000  # min 20000 for gamma, 50000 for phi
 SAMPLE_TIME = 1000
 B = 1.0 / T
 

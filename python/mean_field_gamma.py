@@ -82,7 +82,7 @@ def mean_field_gamma(n, m, g, tem):
 
         energy[b] = -(divide_exps(logs_sum_e, logs_sum) + divide_exps(logs_sum_e2, logs_sum))
         degree[b] = divide_exps(logs_sum_d, logs_sum)
-    energy = energy / (N * M)
+    energy = energy / (N)
     degree = degree / (N - 1.0)
     return energy, degree
 

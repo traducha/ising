@@ -1,108 +1,46 @@
-# -*- coding: utf-8 -*-
-from matplotlib import rc
-rc('font', **{'family' :'serif'})
-import matplotlib.pyplot as plt
-from scipy.special import gamma as g
-from scipy.special import binom
-from scipy.special import hyp2f1
-import numpy as np
-import math
-import os
+import sys
 import csv
-from mean_field import mean_field
-from mean_field_phi import mean_field_phi
+import re
+import glob, os
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.special as sp
+import pprint
+from mean_field_2a import mean_field_phi as phi_mf
+from mean_field_gamma import mean_field_gamma as gamma_mf
+import matplotlib as mpl
+mpl.rcParams['font.family'] = 'serif'
 
 
-N = 100.0
-M = 400.0
-t_max = 60
-
-gammas = np.linspace(0.0, 3.0, 100)
-temp = np.linspace(0.1, t_max, 100)
-
-trans_temp = []
-first = True
-
-for g in []:#gammas:
-    _, degrees = mean_field(N, M, g, temp)
-    t = 0.0
-    again = True
-    once = False
-    for i, degree in enumerate(degrees):
-        if degree > 55 and again:
-            once = True
-            t = temp[i]
-            if i == len(degrees) - 1:
-                if first is False:
-                    t = 1000
-                else:
-                    first = False
-        elif once:
-            again = False
-    trans_temp.append(t)
-
-final_g, final_t = [], []
-for i, t in enumerate(trans_temp):
-    if 0.0 < t < 1000:
-        final_t.append(t)
-        final_g.append(gammas[i])
-
-# plt.plot(final_t, final_g, color='#FFFF33', linewidth=2)
-
-phis = np.linspace(0.0, 2.0, 1000)
-temp = np.linspace(0.1, t_max, 1000)
-
-trans_temp = []
-first = True
-
-for p in phis:
-    _, degrees = mean_field_phi(N, M, p, temp)
-    t = 0.0
-    for i, degree in enumerate(degrees):
-        if degree < 18:
-            t = temp[i]
-            break
-    # print p, t
-    # print degrees
-    trans_temp.append(t)
-
-final_p, final_t = [], []
-for i, t in enumerate(trans_temp):
-    if 0.0 < t < 1000:
-        final_t.append(t)
-        final_p.append(phis[i])
-
-plt.plot(final_t, final_p, color='#FFFF33', linewidth=2)
-
-plt.plot([0, t_max], [1.477, 1.477], color='#006600', linewidth=4)
-
-G = '1.000000'
+n_list = [500]
+G = '1.500000'
 A = '0.000000'
-temp_lim = [0, t_max]
-y_lim = [0, 2]
-y_values = np.arange(101) * float(y_lim[1]) / 101.0
-y_var = 'A'  # 'A' or 'G'
-aspect = temp_lim[1] / y_lim[1]
 
-os.chdir("../res_c{}/res_phi".format(int(M/N)))
-quant = 'largest_degree'  # ['mag', 'mag_abs', 'energy', 'incompatible', 'largest_clust', 'clust_num', 'largest_degree', 'degree_corr']
+quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
+names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
-if 1:
-    value_matrix = []
-    std_matrix = []
+os.chdir("../test_res")
+g_mean = gamma_mf(500.0, 1500.0, 1.5, np.linspace(0.1, 15.0, 200))
 
-    for y in y_values:
-        g = G
-        a = A
-        if y_var == 'A':
-            a = str(round(y, 6)).ljust(8, '0')
-        elif y_var == 'G':
-            g = str(round(y, 6)).ljust(8, '0')
-        else:
-            raise
+plt.figure(figsize=(9, 8))
+for j, q in enumerate(quants):
+    if q == 'mag_abs':
+        ax1 = plt.subplot(311)
+        ax = ax1
+    elif q == 'largest_degree':
+        ax2 = plt.subplot(312, sharex=ax1)
+        ax = ax2
+    elif q == 'energy':
+        ax3 = plt.subplot(313, sharex=ax2)
+        ax = ax3
+    else:
+        continue
 
-        f_name = "{}_vs_B_N{}_L{}_J1.000000_h0.000000_FI0.500000_GA{}_AL{}.csv".format(quant, int(N), int(M), g, a)
-        # print f_name
+    for w, n in enumerate(n_list):
+        m = n * 3
+        norm = [1.0*n, 1.0*n, 1.0*m*n, 1.0*m, 1.0*n, 1.0*n, 1.0*n, 1.0]
+        f_name = "{}_vs_B_N{}_L{}_J1.000000_h0.000000_FI0.500000_GA{}_AL{}.csv".format(q, n, m, G, A)
+        alpha, gamma = float(A), float(G)
         with open(f_name, 'rb') as file:
             x, value, std = csv.reader(file, delimiter=';', quotechar='|')
 
@@ -111,19 +49,24 @@ if 1:
             value[i] = float(value[i])
             std[i] = float(std[i])
 
-        value_matrix.append(value[1:])
-        std_matrix.append(std[1:])
+        ax.errorbar(x[1:], np.array(value[1:]) / norm[j], fmt='os^'[w], fillstyle='none')
 
-    im = plt.imshow(value_matrix, cmap=None, origin='lower', extent=temp_lim+y_lim, interpolation='none', aspect=aspect)
-    plt.colorbar(im)
-    # plt.title('{} for $N={}, M={}$'.format(quant, N, M))
-    plt.xlabel('$T$', fontsize=16)
-    plt.ylabel('$\phi$' if y_var == 'A' else '$\gamma$', fontsize=16)
-    # plt.show()
-    plt.savefig('/home/tomasz/Desktop/2D_{}_{}_{}{}.pdf'.format('PHI' if y_var == 'A' else 'GAMMA', quant,
-                                           'GA' if y_var == 'A' else 'AL', G if y_var == 'A' else A), format="pdf")
-    plt.clf()
+    if q in ['largest_degree']:
+        ax.set_ylim([-0.1, 1.1])
+        ax.plot(np.linspace(0.1, 15.0, 200), g_mean[1], color='black', linewidth=2)
+    if q in ['energy']:
+        # ax.set_ylim([-1.0, 0.1])
+        ax.set_xlabel(r'$T = 1/ \beta$', fontsize=16)
+        ax.plot(np.linspace(0.1, 15.0, 200), g_mean[0], color='black', linewidth=2)
+    if q in ['mag_abs']:
+        ax.set_ylim([-0.01, 1.0])
 
+    ax.set_ylabel(names[j], fontsize=16)
 
-
-
+plt.setp(ax1.get_xticklabels(), visible=False)
+plt.setp(ax2.get_xticklabels(), visible=False)
+plt.tight_layout()
+plt.subplots_adjust(hspace=0.000)
+plt.show()
+# plt.savefig('/home/tomasz/Desktop/1D_gamma.pdf', format="pdf")
+plt.clf()

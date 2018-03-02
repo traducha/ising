@@ -12,15 +12,17 @@ import matplotlib as mpl
 mpl.rcParams['font.family'] = 'serif'
 
 
-n_list = [500, 750, 1000]
-G = '2.000000'
+n_list = [500]
+N = 1000
+G = '1.600000'
 A = '0.000000'
+mean_field_lim = (0.1, 20.0, 200)
 
 quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
 names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
-os.chdir("../res_scaling/gamma")
-g_mean = gamma_mf(1000.0, 3000.0, 2.0, np.linspace(0.1, 40.0, 1000))
+os.chdir("../test_res")
+g_mean = gamma_mf(float(N), N*3.0, float(G), np.linspace(*mean_field_lim))
 
 plt.figure(figsize=(9, 8))
 for j, q in enumerate(quants):
@@ -38,7 +40,7 @@ for j, q in enumerate(quants):
 
     for w, n in enumerate(n_list):
         m = n * 3
-        norm = [1.0*n, 1.0*n, 1.0*m*n, 1.0*m, 1.0*n, 1.0*n, 1.0*n, 1.0]
+        norm = [1.0*n, 1.0*n, 1.0*n, 1.0*m, 1.0*n, 1.0*n, 1.0*n, 1.0]
         f_name = "{}_vs_B_N{}_L{}_J1.000000_h0.000000_FI0.500000_GA{}_AL{}.csv".format(q, n, m, G, A)
         alpha, gamma = float(A), float(G)
         with open(f_name, 'rb') as file:
@@ -53,11 +55,11 @@ for j, q in enumerate(quants):
 
     if q in ['largest_degree']:
         ax.set_ylim([-0.1, 1.1])
-        # ax.plot(np.linspace(0.1, 40.0, 1000), g_mean[1], color='black', linewidth=2)
+        ax.plot(np.linspace(*mean_field_lim), g_mean[1], color='black', linewidth=2)
     if q in ['energy']:
-        ax.set_ylim([-1.0, 0.1])
+        # ax.set_ylim([-1.0, 0.1])
         ax.set_xlabel(r'$T = 1/ \beta$', fontsize=16)
-        # ax.plot(np.linspace(0.1, 40.0, 1000), g_mean[0], color='black', linewidth=2)
+        ax.plot(np.linspace(*mean_field_lim), g_mean[0], color='black', linewidth=2)
     if q in ['mag_abs']:
         ax.set_ylim([-0.01, 1.0])
 

@@ -7,12 +7,13 @@ import csv
 from pprint import pprint
 mpl.rcParams['font.family'] = 'serif'
 
-N = 500
-M = 1500
-T = 40.0
+N = 100
+M = 300
+#T = 0.5
 GAMMA = 1.0
 PHI = 1.0
-temps = (40.0,)
+
+temps = (0.5,)
 
 
 def poisson(k, lambda_):
@@ -21,7 +22,7 @@ def poisson(k, lambda_):
     return 1.0 * (lambda_ ** k) * (np.exp(-lambda_)) / (math.factorial(k))
 
 
-def plot_degree(temp=T, save=False):
+def plot_degree(temp=None, save=False):
     with open('data/k_dist_N{}_M{}_T{}_GA{}_PH{}.csv'.format(N, M, temp, GAMMA, PHI), 'rb') as _file:
         k, y = csv.reader(_file, delimiter=';', quotechar='|')
 
@@ -66,22 +67,39 @@ def plot_degree(temp=T, save=False):
     plt.clf()
 
 
-def plot_graph(temp=T, save=False):
+def plot_graph(temp=None, save=False):
+    f = open('data/graph_N{}_M{}_T{}_GA{}_PH{}.ig'.format(N, M, temp, GAMMA, PHI))
+    f.seek(0)
     g = ig.Graph.Read_Pickle('data/graph_N{}_M{}_T{}_GA{}_PH{}.ig'.format(N, M, temp, GAMMA, PHI))
-    for i in xrange(len(g.vs())):
-        if g.vs(i)['spin'][0][0] == 1:
-            g.vs(i)['color'] = '#26A57C'
-        else:
-            g.vs(i)['color'] = '#26A57C'
+    f.close()
+
+    # spin colors
+    # for i in xrange(len(g.vs())):
+    #     if g.vs(i)['spin'][0][0] == 1:
+    #         g.vs(i)['color'] = '#26A57C'
+    #     else:
+    #         g.vs(i)['color'] = '#26A57C'
     g.es["width"] = 1.5
     g.vs["size"] = 12
+
+    for i in range(N):
+        g.vs(i)['color'] = '#d35618'
+    # component colors
+    for i in max(g.clusters(), key=lambda clust: len(clust)):
+        g.vs(i)['color'] = '#189ad3'
+        g.vs(i)["size"] = 15
+    # stars colors
+    # for i, k in enumerate(g.degree()):
+    #     if k > 90:
+    #         g.vs(i)['color'] = '#189ad3'
+    #         g.vs(i)["size"] = 15
 
     # lay = ig.Graph.layout(g)
     lay = ig.Graph.layout_kamada_kawai(g)
 
     if save:
         # possible formats .png, .pdf, .ps
-        ig.plot(g, layout=lay, target='plots/graph3.pdf'.format(N, M, temp, GAMMA, PHI))
+        ig.plot(g, layout=lay, target='plots/graph{}_{}_{}_{}_{}.pdf'.format(N, M, temp, GAMMA, PHI))
     else:
         ig.plot(g, layout=lay)
 
@@ -89,4 +107,4 @@ def plot_graph(temp=T, save=False):
 if __name__ == '__main__':
     for t in temps:
         # plot_degree(temp=t, save=True)
-        plot_graph(temp=t, save=True)
+        plot_graph(temp=t, save=1)

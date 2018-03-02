@@ -11,15 +11,17 @@ import matplotlib as mpl
 mpl.rcParams['font.family'] = 'serif'
 
 
-n_list = [500, 750, 1000]
+n_list = [500]
+N = 1000.0
 G = '1.000000'
-A = '0.700000'
+A = '0.600000'
+mean_field_lim = (0.1, 25.0, 200)
 
 quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
 names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
-os.chdir("../res_scaling/phi")
-phi_mean = phi_mf(1000.0, 3000.0, 0.7, np.linspace(0.1, 40.0, 1000))
+os.chdir("../test_res")
+phi_mean = phi_mf(N, 3*N, float(A), np.linspace(*mean_field_lim))
 
 plt.figure(figsize=(9, 8))
 for j, q in enumerate(quants):
@@ -37,7 +39,7 @@ for j, q in enumerate(quants):
 
     for w, n in enumerate(n_list):
         m = n * 3
-        norm = [1.0*n, 1.0*n, 1.0*m*n, 1.0*m, 1.0*n, 1.0*n, 1.0*n, 1.0]
+        norm = [1.0*n, 1.0*n, (1.0*m*n*(6.0)**float(A)), 1.0*m, 1.0*n, 1.0*n, 1.0*n, 1.0]  # TODO: remember about average degree!
         f_name = "{}_vs_B_N{}_L{}_J1.000000_h0.000000_FI0.500000_GA{}_AL{}.csv".format(q, n, m, G, A)
         alpha, gamma = float(A), float(G)
         with open(f_name, 'rb') as file:
@@ -50,13 +52,14 @@ for j, q in enumerate(quants):
 
         ax.errorbar(x[1:], np.array(value[1:]) / norm[j], fmt='os^'[w], fillstyle='none')
 
+    # ax.set_xlim([0.0, 23.0])
     if q in ['largest_degree']:
-        ax.set_ylim([-0.1, 1.05])
-        # ax.plot(np.linspace(0.1, 40.0, 1000), phi_mean[1], color='black', linewidth=2)
+        ax.set_ylim([-0.05, 0.85])
+        ax.plot(np.linspace(*mean_field_lim), phi_mean[1], color='black', linewidth=2)
     if q in ['energy']:
-        ax.set_ylim([-0.6, 0.09])
+        # ax.set_ylim([-0.6, 0.09])
         ax.set_xlabel(r'$T = 1/ \beta$', fontsize=16)
-        # ax.plot(np.linspace(0.1, 40.0, 1000), phi_mean[0], color='black', linewidth=2)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean[0], color='black', linewidth=2)
     if q in ['mag_abs']:
         ax.set_ylim([0.01, 1.0])
 

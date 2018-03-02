@@ -6,8 +6,8 @@ import scipy.stats as st
 
 # params
 
-N = 1000.0
-M = 3000.0
+N = 100.0
+M = 300.0
 phi = 0.7
 temp_max = 40
 temp = np.linspace(0.1, temp_max, 1000)
@@ -69,7 +69,7 @@ def mean_field_phi(n, m, fi, temp):
     n_m = np.ceil(0.5 + np.sqrt(1. + 8. * M) / 2.)
 
     it = np.arange(n_m, N + 1)
-    k_s = np.minimum(st.poisson.ppf(1.0 - 1 / it, 2.0 * M / it), it - 1)
+    k_s = np.minimum(st.poisson.ppf(1.0 - 1.0 / it, 2.0 * M / it), it - 1)
     for b in range(len(beta)):
         logs_sum = log_2(it, N) + log_A(it, N) + log_B(it, M) + log_exp(it, M, N, beta[b], phi)
         logs_sum_E = logs_sum + log_E(it, M, N, phi)  # counter for energy
