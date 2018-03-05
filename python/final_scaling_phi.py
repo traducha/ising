@@ -11,17 +11,21 @@ import matplotlib as mpl
 mpl.rcParams['font.family'] = 'serif'
 
 
-n_list = [500]
+n_list = [500, 750, 1000]
 N = 1000.0
+N2 = 500.0
+N3 = 750.0
 G = '1.000000'
 A = '0.600000'
-mean_field_lim = (0.1, 25.0, 200)
+mean_field_lim = (0.1, 27.0, 200)
 
 quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
 names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
-os.chdir("../test_res")
+os.chdir("../res_scaling/phi")
 phi_mean = phi_mf(N, 3*N, float(A), np.linspace(*mean_field_lim))
+phi_mean_2 = phi_mf(N2, 3*N2, float(A), np.linspace(*mean_field_lim))
+phi_mean_3 = phi_mf(N3, 3*N3, float(A), np.linspace(*mean_field_lim))
 
 plt.figure(figsize=(9, 8))
 for j, q in enumerate(quants):
@@ -52,14 +56,18 @@ for j, q in enumerate(quants):
 
         ax.errorbar(x[1:], np.array(value[1:]) / norm[j], fmt='os^'[w], fillstyle='none')
 
-    # ax.set_xlim([0.0, 23.0])
+    ax.set_xlim([0.0, 27.0])
     if q in ['largest_degree']:
         ax.set_ylim([-0.05, 0.85])
-        ax.plot(np.linspace(*mean_field_lim), phi_mean[1], color='black', linewidth=2)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean[1], '--', color='red', linewidth=1)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean_2[1], color='blue', linewidth=1)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean_3[1], '-.', color='green', linewidth=1)
     if q in ['energy']:
         # ax.set_ylim([-0.6, 0.09])
         ax.set_xlabel(r'$T = 1/ \beta$', fontsize=16)
-        ax.plot(np.linspace(*mean_field_lim), phi_mean[0], color='black', linewidth=2)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean[0], '--', color='red', linewidth=1)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean_2[0], color='blue', linewidth=1)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean_3[0], '-.', color='green', linewidth=1)
     if q in ['mag_abs']:
         ax.set_ylim([0.01, 1.0])
 
@@ -69,6 +77,6 @@ plt.setp(ax1.get_xticklabels(), visible=False)
 plt.setp(ax2.get_xticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.000)
-plt.show()
-# plt.savefig('/home/tomasz/Desktop/1D_phi.pdf', format="pdf")
+# plt.show()
+plt.savefig('/home/tomaszraducha/Pulpit/1D_phi.pdf', format="pdf")
 plt.clf()
