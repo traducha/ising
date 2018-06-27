@@ -16,19 +16,19 @@ n_list = [500, 750, 1000]
 N = 1000.0
 N2 = 500.0
 N3 = 750.0
-G = '1.600000'
+G = '1.500000'
 A = '0.000000'
 mean_field_lim = (0.1, 12.0, 200)
 
 quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
 names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
-os.chdir("../res_scaling/gamma")
+os.chdir("../res_scaling_fin/gamma")
 g_mean = gamma_mf(float(N), N*3.0, float(G), np.linspace(*mean_field_lim))
 g_mean_2 = gamma_mf(float(N2), N2*3.0, float(G), np.linspace(*mean_field_lim))
 g_mean_3 = gamma_mf(float(N3), N3*3.0, float(G), np.linspace(*mean_field_lim))
 
-plt.figure(figsize=(9, 8))
+plt.figure(figsize=(9 / 1.2, 8 / 1.2))
 for j, q in enumerate(quants):
     if q == 'mag_abs':
         ax1 = plt.subplot(311)
@@ -64,19 +64,19 @@ for j, q in enumerate(quants):
         ax.plot(np.linspace(*mean_field_lim), g_mean_3[1], '-.', color='green', linewidth=1)
     if q in ['energy']:
         # ax.set_ylim([-1.0, 0.1])
-        ax.set_xlabel(r'$T = 1/ \beta$', fontsize=16)
+        ax.set_xlabel(r'$T = 1/ \beta$', fontsize=18)
         ax.plot(np.linspace(*mean_field_lim), g_mean[0], '--', color='red', linewidth=1)
         ax.plot(np.linspace(*mean_field_lim), g_mean_2[0], color='blue', linewidth=1)
         ax.plot(np.linspace(*mean_field_lim), g_mean_3[0], '-.', color='green', linewidth=1)
     if q in ['mag_abs']:
         ax.set_ylim([-0.01, 1.0])
 
-    ax.set_ylabel(names[j], fontsize=16)
+    ax.set_ylabel(names[j], fontsize=18)
 
 plt.setp(ax1.get_xticklabels(), visible=False)
 plt.setp(ax2.get_xticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.000)
 # plt.show()
-plt.savefig('/home/tomaszraducha/Pulpit/1D_gamma.pdf', format="pdf")
+plt.savefig('/home/tomasz/Desktop/1D_gamma.pdf', format="pdf")
 plt.clf()

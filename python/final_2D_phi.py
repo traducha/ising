@@ -89,17 +89,20 @@ for j, q in enumerate(quants):
         value_matrix.append(value[1:])
         std_matrix.append(std[1:])
 
-    plt.xlabel(r'$T = 1/ \beta$', fontsize=16)
+    plt.xlabel(r'$T = 1/ \beta$', fontsize=18)
     ax.set_xlim([0.0, 150.0])
     print np.min(value_matrix), np.max(value_matrix)
     if q == 'mag_abs':
-        plt.ylabel(r'$\phi$' if y_var == 'A' else r'$\gamma$', fontsize=20)
+        ax.set_title(r'$|m|$', fontsize=18)
+        ax.set_ylabel(r'$\phi$' if y_var == 'A' else r'$\gamma$', fontsize=22)
         im1 = ax.imshow(value_matrix, cmap=None, origin='lower', extent=temp_lim + y_lim, interpolation='none',
-                       aspect=aspect,
+                       aspect=aspect/1.07,
                        vmin=0.0, vmax=1.0)
+        ax.set_title(r'$|m|$', fontsize=18)
     elif q == 'largest_degree':
+        ax.set_title(r'$k_{max}$', fontsize=18)
         im2 = ax.imshow(value_matrix, cmap=None, origin='lower', extent=temp_lim + y_lim, interpolation='none',
-                       aspect=aspect,
+                       aspect=aspect/1.07,
                        vmin=0.0, vmax=1.0)
         plt.plot([0, 150], [1.23723724, 1.23723724], '--', color='black', linewidth=2)
         plt.plot(final_t, final_p, color='#FFFF33', linewidth=2)
@@ -115,8 +118,8 @@ cbar2 = fig.colorbar(im2, ax=ax2)
 plt.setp(ax2.get_yticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(wspace=-0.19)
-# plt.show()
-plt.savefig('/home/tomasz/Desktop/2D_phi.pdf', format='pdf')
+plt.show()
+# plt.savefig('/home/tomasz/Desktop/2D_phi.pdf', format='pdf')
 plt.clf()
 
     # im = plt.imshow(std_matrix, cmap=None, origin='lower', extent=temp_lim + y_lim, interpolation='none', aspect=aspect)
