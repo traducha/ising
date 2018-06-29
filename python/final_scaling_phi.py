@@ -16,13 +16,13 @@ N = 1000.0
 N2 = 500.0
 N3 = 750.0
 G = '1.000000'
-A = '0.500000'
+A = '0.600000'
 mean_field_lim = (0.1, 27.0, 200)
 
 quants = ['mag_abs', 'largest_degree', 'energy', 'incompatible', 'mag', 'largest_clust', 'clust_num', 'degree_corr']
 names = [r'$|m|$', r'$k_{max}$', '$E$', 'incompatible', 'm', 'S', r'n_c', 'degree_corr']
 
-os.chdir("../res_scaling_fin/phi")
+os.chdir("../fin_res_scaling/phi")
 phi_mean = phi_mf(N, 3*N, float(A), np.linspace(*mean_field_lim))
 phi_mean_2 = phi_mf(N2, 3*N2, float(A), np.linspace(*mean_field_lim))
 phi_mean_3 = phi_mf(N3, 3*N3, float(A), np.linspace(*mean_field_lim))
@@ -77,6 +77,6 @@ plt.setp(ax1.get_xticklabels(), visible=False)
 plt.setp(ax2.get_xticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.000)
-# plt.show()
-plt.savefig('/home/tomasz/Desktop/1D_phi.pdf', format="pdf")
+plt.show()
+# plt.savefig('/home/tomasz/Desktop/1D_phi.pdf', format="pdf")
 plt.clf()
