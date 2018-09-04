@@ -61,22 +61,23 @@ for j, q in enumerate(quants):
         ax.set_ylim([-0.05, 0.85])
         ax.plot(np.linspace(*mean_field_lim), phi_mean[1], '--', color='red', linewidth=1)
         ax.plot(np.linspace(*mean_field_lim), phi_mean_2[1], color='blue', linewidth=1)
-        ax.plot(np.linspace(*mean_field_lim), phi_mean_3[1], '-.', color='green', linewidth=1)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean_3[1], '-.', color='green', linewidth=1.5)
     if q in ['energy']:
         ax.set_ylim([-0.09, 0.005])
         ax.set_xlabel(r'$T = 1/ \beta$', fontsize=18)
         ax.plot(np.linspace(*mean_field_lim), phi_mean[0], '--', color='red', linewidth=1)
         ax.plot(np.linspace(*mean_field_lim), phi_mean_2[0], color='blue', linewidth=1)
-        ax.plot(np.linspace(*mean_field_lim), phi_mean_3[0], '-.', color='green', linewidth=1)
+        ax.plot(np.linspace(*mean_field_lim), phi_mean_3[0], '-.', color='green', linewidth=1.5)
     if q in ['mag_abs']:
         ax.set_ylim([0.01, 1.0])
 
     ax.set_ylabel(names[j], fontsize=18)
+    ax.tick_params(axis='both', which='major', labelsize=14, length=4, width=1.1)
 
 plt.setp(ax1.get_xticklabels(), visible=False)
 plt.setp(ax2.get_xticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.000)
-plt.show()
-# plt.savefig('/home/tomasz/Desktop/1D_phi.pdf', format="pdf")
+# plt.show()
+plt.savefig('/home/tomaszraducha/Pulpit/1D_phi.pdf', format="pdf")
 plt.clf()

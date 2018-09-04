@@ -99,6 +99,7 @@ for j, q in enumerate(quants):
                        aspect=aspect/1.07,
                        vmin=0.0, vmax=1.0)
         ax.set_title(r'$|m|$', fontsize=18)
+        ax.tick_params(axis='both', which='major', labelsize=13, length=4, width=1.1)
     elif q == 'largest_degree':
         ax.set_title(r'$k_{max}$', fontsize=18)
         im2 = ax.imshow(value_matrix, cmap=None, origin='lower', extent=temp_lim + y_lim, interpolation='none',
@@ -106,6 +107,7 @@ for j, q in enumerate(quants):
                        vmin=0.0, vmax=1.0)
         plt.plot([0, 150], [1.23723724, 1.23723724], '--', color='black', linewidth=2)
         plt.plot(final_t, final_p, color='#FFFF33', linewidth=2)
+        ax.tick_params(axis='both', which='major', labelsize=13, length=4, width=1.1)
 
 #Create and remove the colorbar for the first subplot
 cbar1 = fig.colorbar(im1, ax=ax1)
@@ -118,8 +120,8 @@ cbar2 = fig.colorbar(im2, ax=ax2)
 plt.setp(ax2.get_yticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(wspace=-0.19)
-plt.show()
-# plt.savefig('/home/tomasz/Desktop/2D_phi.pdf', format='pdf')
+# plt.show()
+plt.savefig('/home/tomaszraducha/Pulpit/2D_phi.pdf', format='pdf')
 plt.clf()
 
     # im = plt.imshow(std_matrix, cmap=None, origin='lower', extent=temp_lim + y_lim, interpolation='none', aspect=aspect)
