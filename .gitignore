@@ -1,4 +1,3 @@
-res*
 Debug/*
 Debug
 Release/*
@@ -7,3 +6,4 @@ Ising.mk
 Ising.project
 Ising.txt
 nohup.out
+.idea
