@@ -79,7 +79,7 @@ for j, q in enumerate(quants):
         elif y_var == 'G':
             g = str(round(y, 6)).ljust(8, '0')
         else:
-            raise
+            raise Exception
 
         f_name = "{}_vs_B_N{}_L{}_J1.000000_h0.000000_FI0.500000_GA{}_AL{}.csv".format(q, N, M, g, a)
         with open(f_name, 'rb') as file:
@@ -122,8 +122,8 @@ cbar2 = fig.colorbar(im2, ax=ax2)
 plt.setp(ax2.get_yticklabels(), visible=False)
 plt.tight_layout()
 plt.subplots_adjust(wspace=-0.19)
-# plt.show()
-plt.savefig('/home/tomaszraducha/Pulpit/2D_gamma.pdf', format='pdf')
+plt.show()
+# plt.savefig('/home/tomaszraducha/Pulpit/2D_gamma.pdf', format='pdf')
 plt.clf()
 
     # im = plt.imshow(std_matrix, cmap=None, origin='lower', extent=temp_lim + y_lim, interpolation='none', aspect=aspect)
